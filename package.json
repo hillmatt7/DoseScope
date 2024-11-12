@@ -1,0 +1,37 @@
+{
+  "name": "mediplot-pro",
+  "version": "1.0.0",
+  "description": "A drug concentration plotter application",
+  "main": "main.js",
+  "scripts": {
+    "start": "npm run build && electron .",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch & electron ."
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "drug",
+    "concentration",
+    "plotter"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router-dom": "^5.3.4",
+    "recharts": "^2.13.0"
+  },
+  "devDependencies": {
+    "electron": "^13.6.9",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1",
+    "babel-loader": "^8.2.3",
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-react": "^7.16.0",
+    "css-loader": "^6.5.1",
+    "style-loader": "^3.3.1"
+  }
+}
