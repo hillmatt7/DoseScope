@@ -1,3 +1,4 @@
+// main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -8,8 +9,8 @@ function createWindow() {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true, // Enable context isolation
-      nodeIntegration: false, // Disable node integration
+      contextIsolation: true, // Ensure context isolation is enabled for security
+      nodeIntegration: false, // Ensure Node integration is disabled for security
     },
   });
 
@@ -18,6 +19,12 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // Initialize the dataPath directory inside app.whenReady()
+  const dataPath = path.join(app.getPath('userData'), 'data');
+  if (!fs.existsSync(dataPath)) {
+    fs.mkdirSync(dataPath);
+  }
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -28,17 +35,15 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
-const dataPath = path.join(app.getPath('userData'), 'data');
-if (!fs.existsSync(dataPath)) {
-  fs.mkdirSync(dataPath);
-}
+// IPC handlers
 
 ipcMain.on('add-drug', (event, drugData) => {
-  const drugFile = path.join(dataPath, `${drugData.name}.drug`);
+  const drugFile = path.join(app.getPath('userData'), 'data', `${drugData.name}.drug`);
   fs.writeFileSync(drugFile, JSON.stringify(drugData, null, 2));
 });
 
 ipcMain.handle('get-drugs', () => {
+  const dataPath = path.join(app.getPath('userData'), 'data');
   const files = fs.readdirSync(dataPath);
   const drugs = files
     .filter((file) => file.endsWith('.drug') && !file.endsWith('_protocol.drug'))
@@ -47,11 +52,12 @@ ipcMain.handle('get-drugs', () => {
 });
 
 ipcMain.on('add-protocol', (event, protocolData) => {
-  const protocolFile = path.join(dataPath, `${protocolData.drugName}_protocol.drug`);
+  const protocolFile = path.join(app.getPath('userData'), 'data', `${protocolData.drugName}_protocol.drug`);
   fs.writeFileSync(protocolFile, JSON.stringify(protocolData, null, 2));
 });
 
 ipcMain.handle('get-protocols', () => {
+  const dataPath = path.join(app.getPath('userData'), 'data');
   const files = fs.readdirSync(dataPath);
   const protocols = files
     .filter((file) => file.endsWith('_protocol.drug'))

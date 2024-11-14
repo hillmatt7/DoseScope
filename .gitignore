@@ -4,6 +4,9 @@ node_modules/
 # Ignore package lock
 package-lock.json
 
+# Ignore webpack
+webpack.config.js
+
 # Ignore dist
 dist/
 

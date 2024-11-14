@@ -1,3 +1,4 @@
+// SearchBar.js
 import React from 'react';
 
 const SearchBar = ({ searchTerm, setSearchTerm }) => {
