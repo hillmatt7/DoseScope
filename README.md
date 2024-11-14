@@ -1,47 +1,82 @@
-DoseScope
-DoseScope is a tracking application designed to help users monitor the presence of substances in their bloodstream. Initially focused on tracking drugs, the app allows for flexible configuration to accommodate foods and supplements, making it a versatile tool for health and wellness tracking.
 
-Features
-Bloodstream Tracking: Real-time tracking of various substances, including drugs, food, and supplements.
-Customizable Protocols: Configure intake schedules and set custom protocols.
-Timeline Navigation: Visualize intake and metabolization of substances over time.
-Flexible Integration: Easily extendable to track food timing and other health metrics, such as blood glucose or growth hormone.
-Installation
-Prerequisites
-Python 3.8+: Make sure Python is installed on your system. You can download it here.
-pip: Package installer for Python (should come installed with Python).
-Step 1: Clone the Repository
-bash
-Copy code
+# DoseScope
+> Track and monitor substances in the bloodstream with precision.
+
+**DoseScope** is a tracking application designed to monitor the presence of various substances—such as drugs, foods, and supplements—in the bloodstream. It helps users manage intake schedules, visualize metabolization rates, and track health metrics over time.
+
+## Installing / Getting Started
+
+To get DoseScope up and running, follow these quick steps:
+
+```shell
 git clone https://github.com/hillmatt7/DoseScope.git
 cd DoseScope
-Step 2: Set Up Virtual Environment (Recommended)
-bash
-Copy code
-python3 -m venv venv
-source venv/bin/activate   # For Linux/Mac
-venv\Scripts\activate      # For Windows
-Step 3: Install Dependencies
-bash
-Copy code
 pip install -r requirements.txt
-Step 4: Configure the App
-API Configuration: Set up any necessary API keys or environment variables.
-Database Setup: If the app requires a database, configure it according to config.py.
-Step 5: Run the Application
-bash
-Copy code
 python app.py
-The application should now be running locally on http://localhost:5000.
+```
 
-Usage
-Adding Substances: Navigate to the “Add Substance” page and input the name, dosage, and intake schedule.
-Tracking Progress: Use the timeline feature to monitor how each substance metabolizes over time.
-Contributing
-Fork the repository.
-Create a new branch (git checkout -b feature-branch).
-Commit your changes (git commit -am 'Add a new feature').
-Push the branch (git push origin feature-branch).
-Open a Pull Request.
-License
-This project is licensed under the MIT License. See the LICENSE file for more information.
+Running the code above will start the application locally at `http://localhost:5000`.
+
+### Initial Configuration
+
+Some configuration may be required based on specific project needs:
+- **API Keys**: Add any API keys needed in `config.py` or set them as environment variables.
+- **Database Setup**: If a database is used, follow configuration steps found in `config.py` to ensure it connects correctly.
+
+## Developing
+
+To develop DoseScope further, follow these steps:
+
+```shell
+git clone https://github.com/hillmatt7/DoseScope.git
+cd DoseScope/
+python3 -m venv venv      # Set up virtual environment (optional)
+source venv/bin/activate  # For macOS/Linux
+venv\Scripts\activate     # For Windows
+pip install -r requirements.txt
+```
+
+This setup will prepare your environment for development with all necessary dependencies.
+
+### Building
+
+If any additional build steps are required (e.g., for production deployment), outline them here. Example:
+
+```shell
+./configure
+make
+make install
+```
+
+This would configure, build, and install any required packages or dependencies for production.
+
+## Features
+
+DoseScope includes several powerful features:
+* **Real-Time Bloodstream Tracking**: Visualize how various substances metabolize in real-time.
+* **Customizable Protocols**: Define intake schedules and protocols for different substances.
+* **Timeline Navigation**: Easily track and view intake, peaks, and metabolization stages over time.
+* **Multi-Substance Analysis**: Overlay multiple substances to analyze interactions and manage health metrics.
+
+## Contributing
+
+We welcome contributions! If you'd like to contribute:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature-branch`).
+3. Commit your changes (`git commit -m 'Add new feature'`).
+4. Push the branch (`git push origin feature-branch`).
+5. Open a Pull Request.
+
+Feel free to reach out if you need any guidance on contributions. For more complex contributions, consider referring to our `CONTRIBUTING.md`.
+
+## Links
+
+Here are some helpful links:
+- Project homepage: [DoseScope Homepage](https://your.github.com/DoseScope/)
+- Repository: [DoseScope Repository](https://github.com/hillmatt7/DoseScope)
+- Issue tracker: [DoseScope Issues](https://github.com/hillmatt7/DoseScope/issues)
+  - For security-related issues, contact the project maintainer directly.
+
+## Licensing
+
+The code in this project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
