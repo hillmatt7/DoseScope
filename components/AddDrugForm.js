@@ -7,6 +7,7 @@ const AddDrugForm = () => {
     molecularWeight: '',
     esters: false,
     halfLife: '',
+    halfLifeUnit: 'hours', // Added unit
   });
 
   const handleChange = (e) => {
@@ -19,13 +20,30 @@ const AddDrugForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    window.electronAPI.send('add-drug', drugData); // Use the exposed API
+
+    // Input validation
+    if (!drugData.name) {
+      alert('Please enter the drug name.');
+      return;
+    }
+    if (isNaN(parseFloat(drugData.molecularWeight))) {
+      alert('Please enter a valid molecular weight.');
+      return;
+    }
+    if (isNaN(parseFloat(drugData.halfLife))) {
+      alert('Please enter a valid half-life.');
+      return;
+    }
+
+    // Save the drug data
+    window.electronAPI.send('add-drug', drugData);
     alert('Drug added successfully!');
     setDrugData({
       name: '',
       molecularWeight: '',
       esters: false,
       halfLife: '',
+      halfLifeUnit: 'hours',
     });
   };
 
@@ -39,9 +57,9 @@ const AddDrugForm = () => {
         onChange={handleChange}
       />
       <input
-        type="text"
+        type="number"
         name="molecularWeight"
-        placeholder="Molecular Weight"
+        placeholder="Molecular Weight (g/mol)"
         value={drugData.molecularWeight}
         onChange={handleChange}
       />
@@ -54,13 +72,25 @@ const AddDrugForm = () => {
           onChange={handleChange}
         />
       </label>
-      <input
-        type="text"
-        name="halfLife"
-        placeholder="Half-Life"
-        value={drugData.halfLife}
-        onChange={handleChange}
-      />
+      <div>
+        <input
+          type="number"
+          name="halfLife"
+          placeholder="Half-Life"
+          value={drugData.halfLife}
+          onChange={handleChange}
+        />
+        <select
+          name="halfLifeUnit"
+          value={drugData.halfLifeUnit}
+          onChange={handleChange}
+        >
+          <option value="seconds">Seconds</option>
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+          <option value="days">Days</option>
+        </select>
+      </div>
       <button type="submit">Add Drug</button>
     </form>
   );

@@ -22,4 +22,26 @@
   .sidebar a:hover {
     background-color: #ddd;
   }
+
+
+.drug-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.drug-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 5px;
+  width: 150px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.drug-item:hover {
+  background-color: #f0f0f0;
+}
+
+
+  
   

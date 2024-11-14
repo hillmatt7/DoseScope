@@ -63,4 +63,21 @@ ipcMain.handle('get-protocols', () => {
     .filter((file) => file.endsWith('_protocol.drug'))
     .map((file) => JSON.parse(fs.readFileSync(path.join(dataPath, file))));
   return protocols;
+
+
+ipcMain.on('export-protocol', (event, protocolDataStr) => {
+  const { dialog } = require('electron');
+  dialog
+    .showSaveDialog({
+      title: 'Save Protocol',
+      defaultPath: 'protocol.json',
+      filters: [{ name: 'JSON Files', extensions: ['json'] }],
+    })
+    .then(({ filePath }) => {
+      if (filePath) {
+        fs.writeFileSync(filePath, protocolDataStr);
+      }
+    });
+});
+
 });
