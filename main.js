@@ -1,12 +1,14 @@
 // main.js
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+let mainWindow;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 1200, // Increased width for better view
-    height: 800, // Increased height for better view
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -15,6 +17,10 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Build the menu
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 }
 
 app.whenReady().then(() => {
@@ -34,46 +40,44 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// Menu template for File > New
+const menuTemplate = [
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'New Protocol',
+        accelerator: 'CmdOrCtrl+N',
+        click() {
+          mainWindow.webContents.send('new-protocol');
+        },
+      },
+      { role: 'quit' },
+    ],
+  },
+];
+
 // IPC handlers
-
-ipcMain.on('add-drug', (event, drugData) => {
-  const drugFile = path.join(
+ipcMain.on('add-compound', (event, compoundData) => {
+  const compoundFile = path.join(
     app.getPath('userData'),
     'data',
-    `${drugData.name}.drug`
+    `${compoundData.name}.drug`
   );
-  fs.writeFileSync(drugFile, JSON.stringify(drugData, null, 2));
+  fs.writeFileSync(compoundFile, JSON.stringify(compoundData, null, 2));
 });
 
-ipcMain.handle('get-drugs', () => {
+ipcMain.handle('get-compounds', () => {
   const dataPath = path.join(app.getPath('userData'), 'data');
   const files = fs.readdirSync(dataPath);
-  const drugs = files
-    .filter((file) => file.endsWith('.drug') && !file.endsWith('_protocol.drug'))
+  const compounds = files
+    .filter((file) => file.endsWith('.drug'))
     .map((file) => JSON.parse(fs.readFileSync(path.join(dataPath, file))));
-  return drugs;
+  return compounds;
 });
 
-ipcMain.on('add-protocol', (event, protocolData) => {
-  const protocolFile = path.join(
-    app.getPath('userData'),
-    'data',
-    `${protocolData.protocolTitle}_protocol.drug`
-  );
-  fs.writeFileSync(protocolFile, JSON.stringify(protocolData, null, 2));
-});
-
-ipcMain.handle('get-protocols', () => {
-  const dataPath = path.join(app.getPath('userData'), 'data');
-  const files = fs.readdirSync(dataPath);
-  const protocols = files
-    .filter((file) => file.endsWith('_protocol.drug'))
-    .map((file) => JSON.parse(fs.readFileSync(path.join(dataPath, file))));
-  return protocols;
-});
-
-// Export protocol handler
-ipcMain.on('export-protocol', (event, protocolDataStr) => {
+// Handle saving protocols (if needed)
+ipcMain.on('save-protocol', (event, protocolDataStr) => {
   dialog
     .showSaveDialog({
       title: 'Save Protocol',

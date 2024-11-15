@@ -1,135 +1,287 @@
 /* styles.css */
-.app {
-  display: flex;
-  height: 100vh;
+
+/* Reset and base styles */
+body, html, #root {
   margin: 0;
   padding: 0;
-}
-
-.graph-container {
-  flex: 1;
-  background-color: #1e1e1e;
-  padding: 0;
-}
-
-.sidebar {
-  width: 350px;
-  background-color: #2e2e2e;
-  overflow-y: auto;
-}
-
-.protocol-builder {
-  padding: 20px;
+  height: 100%;
+  font-family: Arial, sans-serif;
   color: #ffffff;
-}
-
-.protocol-builder input,
-.protocol-builder select {
-  display: block;
-  margin-bottom: 10px;
-  width: 100%;
-  padding: 8px;
-  background-color: #3e3e3e;
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-}
-
-.protocol-builder label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.compound-details {
-  border-top: 1px solid #444;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-
-.drug-search {
-  position: relative;
-}
-
-.drug-search ul {
-  position: absolute;
-  background-color: #2e2e2e;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-}
-
-.drug-search li {
-  padding: 5px;
-}
-
-.drug-search li:hover {
-  background-color: #444;
-}
-
-.drug-item {
-  display: flex;
-  justify-content: space-between;
-  background-color: #3e3e3e;
-  padding: 10px;
-  margin-bottom: 5px;
-  border-radius: 4px;
-}
-
-.drug-item button {
-  background-color: #5e5e5e;
-  color: #ffffff;
-  border: none;
-  padding: 5px;
-  border-radius: 4px;
-}
-
-.drug-item button:hover {
-  background-color: #7e7e7e;
 }
 
 button {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #5e5e5e;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* App layout */
+.app {
+  display: flex;
+  height: 100vh;
+  background-color: #1e1e1e;
+}
+
+/* Empty screen */
+.empty-screen {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1e1e1e;
+}
+
+.create-protocol {
+  text-align: center;
   color: #ffffff;
-  border: none;
-  border-radius: 4px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #7e7e7e;
+.plus-sign {
+  font-size: 100px;
+  line-height: 1;
 }
 
-.drug-list {
-  display: flex;
-  flex-wrap: wrap;
+.plus-sign:hover {
+  color: #0e639c;
 }
 
-.drug-list .drug-item {
-  width: 100%;
+.create-text {
+  font-size: 18px;
+  margin-top: 10px;
 }
 
-h2,
-h3,
-h4 {
-  margin-top: 20px;
-}
-
-input[type='range'] {
-  width: 100%;
-}
-
-.graph-container h2 {
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #252526;
   color: #ffffff;
-  text-align: center;
-  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  height: 75%;
+  z-index: 1000;
+  border-right: 1px solid #444;
 }
 
-.graph-container .plot-container {
+.sidebar.hidden {
+  display: none;
+}
+
+.sidebar .draggable-bar {
+  background-color: #3a3d41;
+  padding: 10px;
+  cursor: move;
+}
+
+.sidebar button {
+  background-color: #3a3d41;
+  border: none;
+  padding: 10px;
+  margin: 5px;
+  text-align: left;
+  color: #ffffff;
+}
+
+.sidebar button:hover {
+  background-color: #45494e;
+}
+
+/* Protocol Tabs */
+.protocol-tabs {
+  display: flex;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444444;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.protocol-tab {
+  padding: 10px;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.protocol-tab.active {
+  background-color: #1e1e1e;
+}
+
+.protocol-tab:hover {
+  background-color: #3a3d41;
+}
+
+/* Compound list at the bottom of the sidebar */
+.compound-list {
+  background-color: #1e1e1e;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: auto;
+  border-top: 1px solid #3a3d41;
+}
+
+.compound-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+}
+
+.compound-item:hover {
+  background-color: #3a3d41;
+}
+
+.compound-item button {
+  background: none;
+  border: none;
+  color: #ff5c5c;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.compound-item button:hover {
+  color: #ff1c1c;
+}
+
+/* Graph area */
+.graph-area {
+  flex: 1;
+  background-color: #1e1e1e;
+  position: relative;
+}
+
+.graph-area .plotly {
   width: 100% !important;
+  height: 100% !important;
+}
+
+.graph-area h2 {
+  text-align: center;
+  padding: 10px;
+  margin: 0;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #444444;
+}
+
+/* Overlays */
+.overlay {
+  position: absolute;
+  top: 50px;
+  left: 300px;
+  width: 400px;
+  background-color: #2d2d2d;
+  color: #ffffff;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay-header {
+  background-color: #3a3d41;
+  padding: 10px;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overlay-header button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.overlay-content {
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.overlay-content input,
+.overlay-content select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  background-color: #45494e;
+  border: none;
+  color: #ffffff;
+  border-radius: 4px;
+}
+
+.overlay-content label {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.overlay-content button {
+  background-color: #0e639c;
+  border: none;
+  padding: 10px;
+  color: #ffffff;
+  width: 100%;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.overlay-content button:hover {
+  background-color: #1177bb;
+}
+
+/* Draggable handle */
+.draggable {
+  cursor: move;
+}
+
+/* Dropdowns */
+select {
+  background-color: #45494e;
+  border: none;
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 4px;
+  appearance: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #555555;
+  border-radius: 5px;
+  border: 2px solid #2d2d2d;
+}
+
+/* Hover effects */
+button:hover {
+  opacity: 0.9;
+}
+
+/* Input focus */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border: 1px solid #0e639c;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .overlay {
+    width: 80%;
+    left: 10%;
+  }
 }

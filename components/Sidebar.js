@@ -1,30 +1,75 @@
-// // Sidebar.js
-// import React from 'react';
-// import { Link } from 'react-router-dom';
+// components/Sidebar.js
+import React, { useState } from 'react';
+import Draggable from 'react-draggable';
+import Overlay from './Overlay';
 
-// const Sidebar = () => {
-//   return (
-//     <div className="sidebar">
-//       <Link to="/add-drug">Add Drug</Link>
-//       <Link to="/library">Drug Library</Link>
-//       <Link to="/protocol">Dosing Protocol</Link>
-//       <Link to="/plot">Plot Graph</Link>
-//     </div>
-//   );
-// };
+const Sidebar = ({
+  currentProtocol,
+  setCurrentProtocol,
+  protocols,
+  setProtocols,
+}) => {
+  const [overlayContent, setOverlayContent] = useState(null);
 
-// export default Sidebar;
+  const openOverlay = (type) => {
+    setOverlayContent(type);
+  };
 
+  const closeOverlay = () => {
+    setOverlayContent(null);
+  };
 
-// Sidebar.js
-import React from 'react';
-import ProtocolBuilder from './ProtocolBuilder';
-
-const Sidebar = () => {
   return (
-    <div className="sidebar">
-      <ProtocolBuilder />
-    </div>
+    currentProtocol && (
+      <Draggable handle=".draggable-bar">
+        <div className="sidebar">
+          <div className="draggable-bar">Options</div>
+          <button onClick={() => openOverlay('newCompound')}>New Compound</button>
+          <button onClick={() => openOverlay('addCompound')}>Add Compound</button>
+          <button onClick={() => openOverlay('compoundIndex')}>
+            Compound Index
+          </button>
+
+          {/* Overlay Windows */}
+          {overlayContent && (
+            <Overlay
+              type={overlayContent}
+              closeOverlay={closeOverlay}
+              protocol={currentProtocol}
+              setProtocol={setCurrentProtocol}
+            />
+          )}
+
+          {/* Compound List */}
+          {currentProtocol && (
+            <div className="compound-list">
+              {currentProtocol.compounds.map((compound, index) => (
+                <div key={index} className="compound-item">
+                  <span>{compound.name}</span>
+                  <button
+                    onClick={() => {
+                      if (
+                        window.confirm(`Remove ${compound.name} from the protocol?`)
+                      ) {
+                        const updatedCompounds = currentProtocol.compounds.filter(
+                          (c, i) => i !== index
+                        );
+                        setCurrentProtocol({
+                          ...currentProtocol,
+                          compounds: updatedCompounds,
+                        });
+                      }
+                    }}
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Draggable>
+    )
   );
 };
 
