@@ -1,5 +1,5 @@
 {
-  "name": "DoseScope",
+  "name": "dosescope",
   "version": "1.0.0",
   "description": "A drug concentration plotter application",
   "main": "main.js",
@@ -15,15 +15,14 @@
     "concentration",
     "plotter"
   ],
-  "author": "Matthew Hill",
+  "author": "Your Name",
   "license": "MIT",
   "dependencies": {
     "plotly.js": "^2.35.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-plotly.js": "^2.6.0",
     "react-router-dom": "^5.3.4",
-    "recharts": "^2.13.0"
+    "react-plotly.js": "^2.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",

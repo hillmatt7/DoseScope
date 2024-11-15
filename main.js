@@ -1,16 +1,16 @@
 // main.js
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200, // Increased width for better view
+    height: 800, // Increased height for better view
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true, // Ensure context isolation is enabled for security
-      nodeIntegration: false, // Ensure Node integration is disabled for security
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 
@@ -20,7 +20,6 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  // Initialize the dataPath directory inside app.whenReady()
   const dataPath = path.join(app.getPath('userData'), 'data');
   if (!fs.existsSync(dataPath)) {
     fs.mkdirSync(dataPath);
@@ -38,7 +37,11 @@ app.on('window-all-closed', function () {
 // IPC handlers
 
 ipcMain.on('add-drug', (event, drugData) => {
-  const drugFile = path.join(app.getPath('userData'), 'data', `${drugData.name}.drug`);
+  const drugFile = path.join(
+    app.getPath('userData'),
+    'data',
+    `${drugData.name}.drug`
+  );
   fs.writeFileSync(drugFile, JSON.stringify(drugData, null, 2));
 });
 
@@ -52,7 +55,11 @@ ipcMain.handle('get-drugs', () => {
 });
 
 ipcMain.on('add-protocol', (event, protocolData) => {
-  const protocolFile = path.join(app.getPath('userData'), 'data', `${protocolData.drugName}_protocol.drug`);
+  const protocolFile = path.join(
+    app.getPath('userData'),
+    'data',
+    `${protocolData.protocolTitle}_protocol.drug`
+  );
   fs.writeFileSync(protocolFile, JSON.stringify(protocolData, null, 2));
 });
 
@@ -63,10 +70,10 @@ ipcMain.handle('get-protocols', () => {
     .filter((file) => file.endsWith('_protocol.drug'))
     .map((file) => JSON.parse(fs.readFileSync(path.join(dataPath, file))));
   return protocols;
+});
 
-
+// Export protocol handler
 ipcMain.on('export-protocol', (event, protocolDataStr) => {
-  const { dialog } = require('electron');
   dialog
     .showSaveDialog({
       title: 'Save Protocol',
@@ -78,6 +85,4 @@ ipcMain.on('export-protocol', (event, protocolDataStr) => {
         fs.writeFileSync(filePath, protocolDataStr);
       }
     });
-});
-
 });

@@ -7,7 +7,7 @@ const AddDrugForm = () => {
     molecularWeight: '',
     esters: false,
     halfLife: '',
-    halfLifeUnit: 'hours', // Added unit
+    halfLifeUnit: 'hours',
   });
 
   const handleChange = (e) => {
@@ -48,7 +48,8 @@ const AddDrugForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="add-drug-form">
+      <h2>Add New Drug</h2>
       <input
         type="text"
         name="name"
@@ -64,7 +65,7 @@ const AddDrugForm = () => {
         onChange={handleChange}
       />
       <label>
-        Esters
+        Esters:
         <input
           type="checkbox"
           name="esters"
