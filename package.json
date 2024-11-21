@@ -15,7 +15,7 @@
     "concentration",
     "plotter"
   ],
-  "author": "Your Name",
+  "author": "Matthew Hill",
   "license": "MIT",
   "dependencies": {
     "antd": "^5.22.1",
