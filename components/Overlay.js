@@ -9,6 +9,9 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     molecularWeight: '',
     halfLife: '',
     halfLifeUnit: 'hours',
+    Cmax: '',
+    Tmax: '',
+    bioavailability: '',
   });
   const [selectedCompound, setSelectedCompound] = useState(null);
   const [newCompoundData, setNewCompoundData] = useState({
@@ -19,7 +22,7 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     durationFrom: 1,
     durationTo: protocol ? protocol.length : 1,
     adjustLevels: 0,
-    accumulate: false,
+    accumulate: true,
     compare: false,
   });
 
@@ -55,6 +58,21 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     };
     setProtocol(updatedProtocol);
     closeOverlay();
+  };
+
+  const handleSaveCompound = async () => {
+    if (!newCompound.name || !newCompound.halfLife || !newCompound.Cmax) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+
+    try {
+      await window.electronAPI.invoke('add-compound', newCompound);
+      alert('Compound saved successfully!');
+      closeOverlay();
+    } catch (error) {
+      console.error('Error saving compound:', error);
+    }
   };
 
   const handleResetCompound = () => {
@@ -145,6 +163,39 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                   <option value="hours">Hours</option>
                   <option value="days">Days</option>
                 </select>
+              </label>
+              <label>
+                Cmax:
+                <input
+                  type="number"
+                  name="cmax"
+                  value={compoundData.cmax}
+                  onChange={(e) =>
+                    setCompoundData({ ...compoundData, cmax: e.target.value })
+                  }
+                />
+              </label>
+              <label>
+                Tmax:
+                <input
+                  type="number"
+                  name="tmax"
+                  value={compoundData.tmax}
+                  onChange={(e) =>
+                    setCompoundData({ ...compoundData, tmax: e.target.value })
+                  }
+                />
+              </label>
+              <label>
+                Bioavailability:
+                <input
+                  type="number"
+                  name="bioavailability"
+                  value={compoundData.bioavailability}
+                  onChange={(e) =>
+                    setCompoundData({ ...compoundData, bioavailability: e.target.value })
+                  }
+                />
               </label>
               <button onClick={handleNewCompound}>Save Compound</button>
             </div>

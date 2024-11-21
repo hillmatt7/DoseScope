@@ -1,50 +1,53 @@
-// AddDrugForm.js
 import React, { useState } from 'react';
 
 const AddDrugForm = () => {
   const [drugData, setDrugData] = useState({
     name: '',
+    type: '',
+    category: '',
     molecularWeight: '',
-    esters: false,
     halfLife: '',
     halfLifeUnit: 'hours',
+    Cmax: '',
+    Tmax: '',
+    bioavailability: '',
+    model: '',
+    notes: '',
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setDrugData({
-      ...drugData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+    const { name, value } = e.target;
+    setDrugData({ ...drugData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Input validation
-    if (!drugData.name) {
-      alert('Please enter the drug name.');
-      return;
-    }
-    if (isNaN(parseFloat(drugData.molecularWeight))) {
-      alert('Please enter a valid molecular weight.');
-      return;
-    }
-    if (isNaN(parseFloat(drugData.halfLife))) {
-      alert('Please enter a valid half-life.');
+    if (!drugData.name || !drugData.halfLife || !drugData.Cmax || !drugData.bioavailability) {
+      alert('Please fill out all required fields.');
       return;
     }
 
-    // Save the drug data
-    window.electronAPI.send('add-drug', drugData);
-    alert('Drug added successfully!');
-    setDrugData({
-      name: '',
-      molecularWeight: '',
-      esters: false,
-      halfLife: '',
-      halfLifeUnit: 'hours',
-    });
+    try {
+      await window.electronAPI.invoke('add-compound', drugData);
+      alert('Drug saved successfully!');
+      setDrugData({
+        name: '',
+        type: '',
+        category: '',
+        molecularWeight: '',
+        halfLife: '',
+        halfLifeUnit: 'hours',
+        Cmax: '',
+        Tmax: '',
+        bioavailability: '',
+        model: '',
+        notes: '',
+      });
+    } catch (error) {
+      console.error('Error saving drug:', error);
+      alert('Failed to save drug.');
+    }
   };
 
   return (
@@ -53,45 +56,80 @@ const AddDrugForm = () => {
       <input
         type="text"
         name="name"
-        placeholder="Drug Name"
+        placeholder="Drug Name (required)"
         value={drugData.name}
+        onChange={handleChange}
+      />
+      <input
+        type="text"
+        name="type"
+        placeholder="Type (optional)"
+        value={drugData.type}
+        onChange={handleChange}
+      />
+      <input
+        type="text"
+        name="category"
+        placeholder="Category (optional)"
+        value={drugData.category}
         onChange={handleChange}
       />
       <input
         type="number"
         name="molecularWeight"
-        placeholder="Molecular Weight (g/mol)"
+        placeholder="Molecular Weight (optional)"
         value={drugData.molecularWeight}
         onChange={handleChange}
       />
-      <label>
-        Esters:
-        <input
-          type="checkbox"
-          name="esters"
-          checked={drugData.esters}
-          onChange={handleChange}
-        />
-      </label>
-      <div>
-        <input
-          type="number"
-          name="halfLife"
-          placeholder="Half-Life"
-          value={drugData.halfLife}
-          onChange={handleChange}
-        />
-        <select
-          name="halfLifeUnit"
-          value={drugData.halfLifeUnit}
-          onChange={handleChange}
-        >
-          <option value="seconds">Seconds</option>
-          <option value="minutes">Minutes</option>
-          <option value="hours">Hours</option>
-          <option value="days">Days</option>
-        </select>
-      </div>
+      <input
+        type="number"
+        name="halfLife"
+        placeholder="Half-Life (hours, required)"
+        value={drugData.halfLife}
+        onChange={handleChange}
+      />
+      <select
+        name="halfLifeUnit"
+        value={drugData.halfLifeUnit}
+        onChange={handleChange}
+      >
+        <option value="hours">Hours</option>
+        <option value="days">Days</option>
+      </select>
+      <input
+        type="number"
+        name="Cmax"
+        placeholder="Cmax (ng/ml, required)"
+        value={drugData.Cmax}
+        onChange={handleChange}
+      />
+      <input
+        type="number"
+        name="Tmax"
+        placeholder="Tmax (hours, optional)"
+        value={drugData.Tmax}
+        onChange={handleChange}
+      />
+      <input
+        type="number"
+        name="bioavailability"
+        placeholder="Bioavailability (0-1, required)"
+        value={drugData.bioavailability}
+        onChange={handleChange}
+      />
+      <input
+        type="text"
+        name="model"
+        placeholder="Model (optional)"
+        value={drugData.model}
+        onChange={handleChange}
+      />
+      <textarea
+        name="notes"
+        placeholder="Notes (optional)"
+        value={drugData.notes}
+        onChange={handleChange}
+      ></textarea>
       <button type="submit">Add Drug</button>
     </form>
   );

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Healthcare Charting Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-xX2ABzVt9WZVx+joNClt4WqLLZ/2pGKdqfF1u+3EmsVYFcWPyxiKjN6cmv3gBYlYFcJ9apz++WsnphC8YHg4Jw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">HealthChart</div>
+        <!-- Tabs for Multiple Projects -->
+        <div class="tabs">
+            <div class="tab active">Project 1</div>
+            <div class="tab">Project 2</div>
+            <div class="tab">Project 3</div>
+            <button class="add-tab"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="toolbar">
+            <button id="btnAddIndicator"><i class="fas fa-plus-circle"></i></button>
+            <button id="btnSettings"><i class="fas fa-cog"></i></button>
+            <button id="btnFullscreen"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <ul>
+                <li><i class="fas fa-crosshairs" title="Select Tool"></i></li>
+                <li><i class="fas fa-comment" title="Comments"></i></li>
+                <li><i class="fas fa-file-medical-alt" title="Reports"></i></li>
+                <li><i class="fas fa-chart-line" title="Analytics"></i></li>
+            </ul>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Chart Area -->
+            <div class="chart-area">
+                <canvas id="chartCanvas"></canvas>
+            </div>
+            <!-- Medication Controls -->
+            <div class="medication-controls">
+                <button id="addMedicationBtn" class="add-medication-btn"><i class="fas fa-plus"></i></button>
+                <div id="medicationTabs" class="medication-tabs">
+                    <!-- Medication tabs will be added here -->
+                </div>
+            </div>
+            <!-- Notifications -->
+            <div class="notifications">
+                <div class="notification">
+                    <strong>Dosage of Medication X exceeds recommended amount.</strong><br>
+                    <small>10 mins ago</small>
+                </div>
+                <div class="notification">
+                    <strong>Patient Y has a conflicting medication.</strong><br>
+                    <small>30 mins ago</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        &copy; 2024 HealthChart
+    </div>
+
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
