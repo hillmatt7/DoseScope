@@ -1,36 +1,45 @@
 // src/components/Header.js
 
 import React from 'react';
+import { Layout, Tabs, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 
-const Header = ({
-  protocols,
-  currentProtocol,
-  setCurrentProtocol,
-  setShowNewProtocolModal,
-}) => {
+const { Header } = Layout;
+
+const ProtocolTabs = ({ protocols, currentProtocol, setCurrentProtocol, setShowNewProtocolDrawer }) => (
+  <Tabs
+    type="card"
+    activeKey={currentProtocol?.name}
+    onChange={(key) => {
+      const selectedProtocol = protocols.find((protocol) => protocol.name === key);
+      setCurrentProtocol(selectedProtocol);
+    }}
+    tabBarExtraContent={
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        onClick={() => setShowNewProtocolDrawer(true)}
+        style={{ backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }}
+      >
+        New Protocol
+      </Button>
+    }
+  >
+    {protocols.map((protocol) => (
+      <Tabs.TabPane tab={protocol.name} key={protocol.name} />
+    ))}
+  </Tabs>
+);
+
+const AppHeader = (props) => {
   return (
-    <div className="header">
-      <div className="logo">HealthChart</div>
-      {/* Tabs for Multiple Projects */}
-      <div className="tabs">
-        {protocols.map((protocol) => (
-          <div
-            key={protocol.name}
-            className={`tab ${currentProtocol?.name === protocol.name ? 'active' : ''}`}
-            onClick={() => setCurrentProtocol(protocol)}
-          >
-            {protocol.name}
-          </div>
-        ))}
-        <button className="add-tab" onClick={() => setShowNewProtocolModal(true)}>
-          <i className="fas fa-plus"></i>
-        </button>
+    <Header className="header">
+      <div className="logo">DoseScope</div>
+      <div className="tabs-container">
+        <ProtocolTabs {...props} />
       </div>
-      <div className="toolbar">
-        {/* Toolbar buttons can be added here */}
-      </div>
-    </div>
+    </Header>
   );
 };
 
-export default Header;
+export default AppHeader;

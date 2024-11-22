@@ -1,42 +1,66 @@
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
+import { Layout, notification } from 'antd';
+import AppHeader from './components/Header';
+import AppSidebar from './components/Sidebar';
 import ContentArea from './components/ContentArea';
-import Footer from './components/Footer';
-import NewProtocolModal from './components/NewProtocolModal';
-import PropertiesModal from './components/PropertiesModal';
-import ScaleAdjustmentModal from './components/ScaleAdjustmentModal';
+import AppFooter from './components/Footer';
+import NewProtocolDrawer from './components/NewProtocolDrawer';
+import PropertiesDrawer from './components/PropertiesDrawer';
+import ScaleAdjustmentDrawer from './components/ScaleAdjustmentDrawer';
+import AddCompoundModal from './components/AddCompoundModal';
+import NewCompoundModal from './components/NewCompoundModal';
 import './styles.css';
 
-function App() {
+const { Content } = Layout;
+
+const App = () => {
   const [protocols, setProtocols] = useState([]);
   const [currentProtocol, setCurrentProtocol] = useState(null);
-  const [showNewProtocolModal, setShowNewProtocolModal] = useState(false);
-  const [showPropertiesModal, setShowPropertiesModal] = useState(false);
-  const [showScaleAdjustmentModal, setShowScaleAdjustmentModal] = useState(false);
+  const [showNewProtocolDrawer, setShowNewProtocolDrawer] = useState(false);
+  const [showPropertiesDrawer, setShowPropertiesDrawer] = useState(false);
+  const [showScaleAdjustmentDrawer, setShowScaleAdjustmentDrawer] = useState(false);
+  const [showAddCompoundModal, setShowAddCompoundModal] = useState(false);
+  const [showNewCompoundModal, setShowNewCompoundModal] = useState(false);
   const [scaleSettings, setScaleSettings] = useState({
     timeUnit: 'weeks',
   });
   const [notifications, setNotifications] = useState([]);
 
+  // Replace alert with Ant Design notification
+  const openNotification = (message) => {
+    notification.info({
+      message,
+      placement: 'topRight',
+      duration: 3,
+    });
+  };
+
   useEffect(() => {
     // IPC listeners
     window.electronAPI.receive('new-protocol', () => {
-      setShowNewProtocolModal(true);
+      setShowNewProtocolDrawer(true);
     });
 
     window.electronAPI.receive('open-properties', () => {
       if (currentProtocol) {
-        setShowPropertiesModal(true);
+        setShowPropertiesDrawer(true);
       } else {
-        alert('No protocol selected.');
+        openNotification('No protocol selected.');
       }
     });
 
     window.electronAPI.receive('open-scale-adjustment', () => {
-      setShowScaleAdjustmentModal(true);
+      setShowScaleAdjustmentDrawer(true);
+    });
+
+    window.electronAPI.receive('open-add-compound', () => {
+      if (currentProtocol) {
+        setShowAddCompoundModal(true);
+      } else {
+        openNotification('No protocol selected.');
+      }
     });
 
     // Update notifications when compounds are added/removed
@@ -59,7 +83,7 @@ function App() {
     };
     setProtocols([...protocols, newProtocol]);
     setCurrentProtocol(newProtocol);
-    setShowNewProtocolModal(false);
+    setShowNewProtocolDrawer(false);
   };
 
   const handleUpdateProtocol = (updatedProtocol) => {
@@ -68,12 +92,12 @@ function App() {
     );
     setProtocols(updatedProtocols);
     setCurrentProtocol(updatedProtocol);
-    setShowPropertiesModal(false);
+    setShowPropertiesDrawer(false);
   };
 
   const handleScaleAdjustment = (newScaleSettings) => {
     setScaleSettings(newScaleSettings);
-    setShowScaleAdjustmentModal(false);
+    setShowScaleAdjustmentDrawer(false);
   };
 
   const addNotification = (message) => {
@@ -85,48 +109,62 @@ function App() {
   };
 
   return (
-    <div className="app">
-      {showNewProtocolModal && (
-        <NewProtocolModal
-          onClose={() => setShowNewProtocolModal(false)}
-          onCreate={handleCreateProtocol}
-        />
-      )}
-      {showPropertiesModal && (
-        <PropertiesModal
-          protocol={currentProtocol}
-          onClose={() => setShowPropertiesModal(false)}
-          onUpdate={handleUpdateProtocol}
-        />
-      )}
-      {showScaleAdjustmentModal && (
-        <ScaleAdjustmentModal
-          onClose={() => setShowScaleAdjustmentModal(false)}
-          onSave={handleScaleAdjustment}
-        />
-      )}
-      <Header
+    <Layout className="app">
+      <AppHeader
         protocols={protocols}
         currentProtocol={currentProtocol}
         setCurrentProtocol={setCurrentProtocol}
-        setShowNewProtocolModal={setShowNewProtocolModal}
+        setShowNewProtocolDrawer={setShowNewProtocolDrawer}
       />
-      <div className="main-content">
-        <Sidebar
+      <Layout>
+        <AppSidebar
           currentProtocol={currentProtocol}
-          setShowPropertiesModal={setShowPropertiesModal}
+          setShowPropertiesDrawer={setShowPropertiesDrawer}
+          setShowNewCompoundModal={setShowNewCompoundModal}
         />
-        <ContentArea
-          currentProtocol={currentProtocol}
-          setCurrentProtocol={setCurrentProtocol}
-          scaleSettings={scaleSettings}
-          notifications={notifications}
-          setNotifications={setNotifications}
-        />
-      </div>
-      <Footer />
-    </div>
+        <Content>
+          <ContentArea
+            currentProtocol={currentProtocol}
+            setCurrentProtocol={setCurrentProtocol}
+            scaleSettings={scaleSettings}
+            notifications={notifications}
+            setNotifications={setNotifications}
+          />
+        </Content>
+      </Layout>
+      <AppFooter />
+      <NewProtocolDrawer
+        visible={showNewProtocolDrawer}
+        onClose={() => setShowNewProtocolDrawer(false)}
+        onCreate={handleCreateProtocol}
+      />
+      {currentProtocol && (
+        <>
+          <PropertiesDrawer
+            visible={showPropertiesDrawer}
+            protocol={currentProtocol}
+            onClose={() => setShowPropertiesDrawer(false)}
+            onUpdate={handleUpdateProtocol}
+          />
+          <ScaleAdjustmentDrawer
+            visible={showScaleAdjustmentDrawer}
+            onClose={() => setShowScaleAdjustmentDrawer(false)}
+            onSave={handleScaleAdjustment}
+          />
+        </>
+      )}
+      <AddCompoundModal
+        visible={showAddCompoundModal}
+        onClose={() => setShowAddCompoundModal(false)}
+        protocol={currentProtocol}
+        setProtocol={setCurrentProtocol}
+      />
+      <NewCompoundModal
+        visible={showNewCompoundModal}
+        onClose={() => setShowNewCompoundModal(false)}
+      />
+    </Layout>
   );
-}
+};
 
 export default App;

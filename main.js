@@ -1,8 +1,7 @@
 // main.js
 
-const { app, BrowserWindow, ipcMain, Menu } = require('electron'); // Added Menu
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
-const url = require('url');
 
 let mainWindow;
 
@@ -18,16 +17,10 @@ function createWindow() {
   });
 
   // Load the index.html from the dist directory
-  mainWindow.loadURL(
-    url.format({
-      pathname: path.join(__dirname, 'dist', 'index.html'),
-      protocol: 'file:',
-      slashes: true,
-    })
-  );
+  mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Open the DevTools (optional)
+  // mainWindow.webContents.openDevTools();
 
   // Define the application menu
   const menuTemplate = [

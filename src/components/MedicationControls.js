@@ -1,16 +1,17 @@
 // src/components/MedicationControls.js
 
 import React, { useState, useEffect } from 'react';
+import { Button, Tag, Space } from 'antd';
+import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
   const [medications, setMedications] = useState(protocol ? protocol.compounds : []);
 
   const addMedication = () => {
     if (protocol) {
-      // Open add compound overlay
       window.electronAPI.send('open-add-compound');
     } else {
-      alert('No protocol selected.');
+      // Handle no protocol selected
     }
   };
 
@@ -19,7 +20,6 @@ const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
     setMedications(updatedCompounds);
     setProtocol({ ...protocol, compounds: updatedCompounds });
 
-    // Add notification
     setNotifications((prevNotifications) => [
       {
         message: `Removed medication: ${medication.name}`,
@@ -28,7 +28,6 @@ const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
       ...prevNotifications,
     ]);
 
-    // Notify main process
     window.electronAPI.send('compound-removed', medication.name);
   };
 
@@ -40,19 +39,27 @@ const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
 
   return (
     <div className="medication-controls">
-      <button id="addMedicationBtn" className="add-medication-btn" onClick={addMedication}>
-        <i className="fas fa-plus"></i>
-      </button>
-      <div id="medicationTabs" className="medication-tabs">
+      <Button
+        type="primary"
+        shape="circle"
+        icon={<PlusOutlined />}
+        onClick={addMedication}
+        className="add-medication-btn"
+        style={{ backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }}
+      />
+      <Space direction="vertical" className="medication-tabs">
         {medications.map((med) => (
-          <div key={med.name} className="medication-tab">
-            <span className="med-name">{med.name}</span>
-            <span className="remove-med" onClick={() => removeMedication(med)}>
-              &times;
-            </span>
-          </div>
+          <Tag
+            key={med.name}
+            closable
+            onClose={() => removeMedication(med)}
+            closeIcon={<CloseCircleOutlined />}
+            color="volcano"
+          >
+            {med.name}
+          </Tag>
         ))}
-      </div>
+      </Space>
     </div>
   );
 };

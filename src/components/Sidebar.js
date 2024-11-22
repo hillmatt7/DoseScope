@@ -1,38 +1,70 @@
 // src/components/Sidebar.js
 
 import React from 'react';
+import { Layout, Menu } from 'antd';
+import {
+  PlusCircleOutlined,
+  SettingOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 
-const Sidebar = ({ currentProtocol, setShowPropertiesModal }) => {
+const { Sider } = Layout;
+
+const AppSidebar = ({
+  currentProtocol,
+  setShowPropertiesDrawer,
+  setShowNewCompoundModal,
+}) => {
   const handleAddCompound = () => {
     if (currentProtocol) {
-      // Open add compound overlay
       window.electronAPI.send('open-add-compound');
     } else {
-      alert('No protocol selected.');
+      // Handle no protocol selected
     }
   };
 
   const handleOpenProperties = () => {
     if (currentProtocol) {
-      setShowPropertiesModal(true);
+      setShowPropertiesDrawer(true);
     } else {
-      alert('No protocol selected.');
+      // Handle no protocol selected
     }
   };
 
+  const handleNewCompound = () => {
+    setShowNewCompoundModal(true);
+  };
+
   return (
-    <div className="sidebar">
-      <ul>
-        <li onClick={handleAddCompound}>
-          <i className="fas fa-plus-circle" title="Add Compound"></i>
-        </li>
-        <li onClick={handleOpenProperties}>
-          <i className="fas fa-cog" title="Properties"></i>
-        </li>
-        {/* Additional buttons can be added here */}
-      </ul>
-    </div>
+    <Sider width={80} theme="dark" style={{ backgroundColor: '#1f1f1f' }}>
+      <Menu
+        mode="inline"
+        theme="dark"
+        style={{ height: '100%', backgroundColor: '#1f1f1f' }}
+      >
+        <Menu.Item
+          key="newCompound"
+          icon={<PlusOutlined style={{ fontSize: '24px', color: '#fff' }} />}
+          onClick={handleNewCompound}
+        />
+        <Menu.Item
+          key="addCompound"
+          icon={
+            <PlusCircleOutlined style={{ fontSize: '24px', color: '#fff' }} />
+          }
+          onClick={handleAddCompound}
+        />
+        <Menu.Item
+          key="properties"
+          icon={
+            <SettingOutlined style={{ fontSize: '24px', color: '#fff' }} />
+          }
+          onClick={handleOpenProperties}
+        />
+        {/* Additional menu items */}
+      </Menu>
+    </Sider>
   );
 };
 
-export default Sidebar;
+export default AppSidebar;

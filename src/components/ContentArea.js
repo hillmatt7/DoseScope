@@ -3,7 +3,6 @@
 import React from 'react';
 import ChartArea from './ChartArea';
 import MedicationControls from './MedicationControls';
-import Notifications from './Notifications';
 
 const ContentArea = ({
   currentProtocol,
@@ -20,7 +19,6 @@ const ContentArea = ({
         setProtocol={setCurrentProtocol}
         setNotifications={setNotifications}
       />
-      <Notifications notifications={notifications} />
     </div>
   );
 };
