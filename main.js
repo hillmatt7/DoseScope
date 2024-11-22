@@ -14,6 +14,7 @@ function ensureLocalLibraryExists() {
   } else {
     console.log(`Directory '${dataPath}' already exists.`);
   }
+  return dataPath;
 }
 
 function createWindow() {
@@ -79,8 +80,7 @@ const menuTemplate = [
 
 ipcMain.handle('add-compound', async (event, compoundData) => {
   try {
-    ensureLocalLibraryExists();
-    const directory = path.join(app.getPath('userData'), 'local_library');
+    const directory = ensureLocalLibraryExists();
     const compoundFile = path.join(directory, `${compoundData.name}.cmpd`);
 
     // Ensure numeric fields are properly formatted
@@ -107,13 +107,12 @@ ipcMain.handle('add-compound', async (event, compoundData) => {
 
 ipcMain.handle('get-compounds', async () => {
   try {
-    ensureLocalLibraryExists();
-    const dataPath = path.join(app.getPath('userData'), 'local_library');
-    const files = fs.readdirSync(dataPath);
+    const directory = ensureLocalLibraryExists();
+    const files = fs.readdirSync(directory);
     const compounds = files
       .filter((file) => file.endsWith('.cmpd'))
-      .map((file) => parseCompoundFile(path.join(dataPath, file)));
-    console.log(`Compounds loaded from ${dataPath}`);
+      .map((file) => parseCompoundFile(path.join(directory, file)));
+    console.log(`Compounds loaded from ${directory}`);
     return compounds;
   } catch (error) {
     console.error('Error reading compounds:', error);

@@ -7,16 +7,12 @@ const Graph = ({ protocol, scaleSettings }) => {
   const graphRef = useRef(null);
 
   useEffect(() => {
-    if (protocol) {
-      renderGraph();
-    }
+    renderGraph();
   }, [protocol, scaleSettings]);
 
   const renderGraph = () => {
     // Clear any existing SVG
     d3.select(graphRef.current).selectAll('*').remove();
-
-    const data = generateData(protocol);
 
     // Set up SVG dimensions
     const margin = { top: 20, right: 30, bottom: 50, left: 60 };
@@ -29,12 +25,6 @@ const Graph = ({ protocol, scaleSettings }) => {
       .append('svg')
       .attr('width', graphRef.current.clientWidth)
       .attr('height', graphRef.current.clientHeight)
-      .call(
-        d3.zoom()
-          .scaleExtent([0.5, 20])
-          .translateExtent([[0, 0], [width, height]])
-          .on('zoom', zoomed)
-      )
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -42,28 +32,57 @@ const Graph = ({ protocol, scaleSettings }) => {
     const xScale = d3.scaleLinear().range([0, width]).clamp(true);
     const yScale = d3.scaleLinear().range([height, 0]);
 
-    // Set domains
-    xScale.domain([0, d3.max(data.totalConcentration, (d) => d.time)]);
-    yScale.domain([0, d3.max(data.totalConcentration, (d) => d.concentration) * 1.1]);
+    let data = { totalConcentration: [] };
 
-    // Ensure concentrations are not negative
-    data.totalConcentration = data.totalConcentration.map((d) => ({
-      time: d.time,
-      concentration: Math.max(0, d.concentration),
-    }));
+    if (protocol && protocol.compounds && protocol.compounds.length > 0) {
+      data = generateData(protocol);
+
+      // Ensure concentrations are not negative
+      data.totalConcentration = data.totalConcentration.map((d) => ({
+        time: d.time,
+        concentration: Math.max(0, d.concentration),
+      }));
+
+      // Set domains based on data
+      xScale.domain([0, d3.max(data.totalConcentration, (d) => d.time)]);
+      yScale.domain([0, d3.max(data.totalConcentration, (d) => d.concentration) * 1.1]);
+    } else {
+      // Set default domains when no data is present
+      xScale.domain([0, 10]); // Default x-axis from 0 to 10 units
+      yScale.domain([0, 10]); // Default y-axis from 0 to 10 units
+    }
 
     // X-axis ticks based on time unit and scale settings
-    const timeUnit = scaleSettings?.timeUnit || protocol.lengthUnit; // 'hours', 'days', or 'weeks'
-    const minorTickInterval = parseInt(scaleSettings?.minorTickInterval) || 1;
-    const majorTickInterval = parseInt(scaleSettings?.majorTickInterval) || 7;
+    const timeUnit = scaleSettings?.timeUnit || protocol?.lengthUnit || 'weeks'; // 'days' or 'weeks'
+    let minorTickInterval, majorTickInterval, timeMultiplier;
+
+    if (timeUnit === 'weeks') {
+      minorTickInterval = 1; // 1 day
+      majorTickInterval = 7; // 7 days in a week
+      timeMultiplier = 24; // Convert days to hours
+    } else if (timeUnit === 'days') {
+      minorTickInterval = 1; // 1 hour
+      majorTickInterval = 24; // 24 hours in a day
+      timeMultiplier = 1; // Hours
+    } else {
+      // Default to days if timeUnit is not 'weeks' or 'days'
+      minorTickInterval = 1; // 1 hour
+      majorTickInterval = 24; // 24 hours in a day
+      timeMultiplier = 1; // Hours
+    }
 
     const xAxis = d3
       .axisBottom(xScale)
-      .ticks((d3.max(data.totalConcentration, (d) => d.time) / minorTickInterval) + 1)
+      .ticks((xScale.domain()[1] / timeMultiplier / minorTickInterval) + 1)
       .tickSize(-height)
       .tickFormat((d) => {
-        if (d % majorTickInterval === 0) {
-          return `${timeUnit.charAt(0).toUpperCase() + timeUnit.slice(1)} ${d / majorTickInterval}`;
+        const timeValue = d / timeMultiplier;
+        if (timeValue % majorTickInterval === 0) {
+          if (timeUnit === 'weeks') {
+            return `Week ${timeValue / majorTickInterval}`;
+          } else if (timeUnit === 'days') {
+            return `Day ${timeValue}`;
+          }
         }
         return '';
       });
@@ -94,7 +113,7 @@ const Graph = ({ protocol, scaleSettings }) => {
       .call(
         d3
           .axisBottom(xScale)
-          .ticks((d3.max(data.totalConcentration, (d) => d.time) / minorTickInterval) + 1)
+          .ticks((xScale.domain()[1] / timeMultiplier / minorTickInterval) + 1)
           .tickSize(-height)
           .tickFormat('')
       );
@@ -110,47 +129,49 @@ const Graph = ({ protocol, scaleSettings }) => {
           .tickFormat('')
       );
 
-    // Line generator function
-    const line = d3
-      .line()
-      .defined((d) => !isNaN(d.concentration) && d.concentration >= 0)
-      .x((d) => xScale(d.time))
-      .y((d) => yScale(d.concentration));
+    if (data.totalConcentration.length > 0) {
+      // Line generator function
+      const line = d3
+        .line()
+        .defined((d) => !isNaN(d.concentration) && d.concentration >= 0)
+        .x((d) => xScale(d.time))
+        .y((d) => yScale(d.concentration));
 
-    // Add total concentration line
-    svg
-      .append('path')
-      .datum(data.totalConcentration)
-      .attr('class', 'line total-line')
-      .attr('fill', 'none')
-      .attr('stroke', '#1f77b4')
-      .attr('stroke-width', 2)
-      .attr('d', line);
+      // Add total concentration line
+      svg
+        .append('path')
+        .datum(data.totalConcentration)
+        .attr('class', 'line total-line')
+        .attr('fill', 'none')
+        .attr('stroke', '#1f77b4')
+        .attr('stroke-width', 2)
+        .attr('d', line);
 
-    // Add circles and tooltips for total concentration
-    svg
-      .selectAll('.dot')
-      .data(data.totalConcentration)
-      .enter()
-      .append('circle')
-      .attr('class', 'dot')
-      .attr('cx', (d) => xScale(d.time))
-      .attr('cy', (d) => yScale(d.concentration))
-      .attr('r', 3)
-      .attr('fill', '#1f77b4')
-      .on('mouseover', (event, d) => {
-        // Show tooltip
-        d3.select(graphRef.current)
-          .append('div')
-          .attr('class', 'tooltip')
-          .style('left', `${event.pageX + 5}px`)
-          .style('top', `${event.pageY - 28}px`)
-          .html(`Time: ${d.time} hours<br/>Concentration: ${d.concentration.toFixed(2)} ng/ml`);
-      })
-      .on('mouseout', () => {
-        // Remove tooltip
-        d3.select(graphRef.current).select('.tooltip').remove();
-      });
+      // Add circles and tooltips for total concentration
+      svg
+        .selectAll('.dot')
+        .data(data.totalConcentration)
+        .enter()
+        .append('circle')
+        .attr('class', 'dot')
+        .attr('cx', (d) => xScale(d.time))
+        .attr('cy', (d) => yScale(d.concentration))
+        .attr('r', 3)
+        .attr('fill', '#1f77b4')
+        .on('mouseover', (event, d) => {
+          // Show tooltip
+          d3.select(graphRef.current)
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('left', `${event.pageX + 5}px`)
+            .style('top', `${event.pageY - 28}px`)
+            .html(`Time: ${d.time} hours<br/>Concentration: ${d.concentration.toFixed(2)} ng/ml`);
+        })
+        .on('mouseout', () => {
+          // Remove tooltip
+          d3.select(graphRef.current).select('.tooltip').remove();
+        });
+    }
 
     // Add axis labels
     svg
@@ -171,6 +192,13 @@ const Graph = ({ protocol, scaleSettings }) => {
       .text('Concentration (ng/ml)');
 
     // Zoom function
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 20])
+      .translateExtent([[0, 0], [width, height]])
+      .on('zoom', zoomed);
+
+    d3.select(graphRef.current).select('svg').call(zoom);
+
     function zoomed(event) {
       const newXScale = event.transform.rescaleX(xScale);
       const newYScale = event.transform.rescaleY(yScale);
@@ -191,7 +219,7 @@ const Graph = ({ protocol, scaleSettings }) => {
         .call(
           d3
             .axisBottom(newXScale)
-            .ticks((d3.max(data.totalConcentration, (d) => d.time) / minorTickInterval) + 1)
+            .ticks((newXScale.domain()[1] / timeMultiplier / minorTickInterval) + 1)
             .tickSize(-height)
             .tickFormat('')
         );
@@ -205,23 +233,26 @@ const Graph = ({ protocol, scaleSettings }) => {
             .tickFormat('')
         );
 
-      // Update lines
-      svg
-        .selectAll('.line')
-        .attr(
-          'd',
-          d3
-            .line()
-            .defined((d) => !isNaN(d.concentration) && d.concentration >= 0)
-            .x((d) => newXScale(d.time))
-            .y((d) => newYScale(d.concentration))
-        );
+      // Update lines and dots if data exists
+      if (data.totalConcentration.length > 0) {
+        // Update lines
+        svg
+          .selectAll('.line')
+          .attr(
+            'd',
+            d3
+              .line()
+              .defined((d) => !isNaN(d.concentration) && d.concentration >= 0)
+              .x((d) => newXScale(d.time))
+              .y((d) => newYScale(d.concentration))
+          );
 
-      // Update dots
-      svg
-        .selectAll('.dot')
-        .attr('cx', (d) => newXScale(d.time))
-        .attr('cy', (d) => newYScale(d.concentration));
+        // Update dots
+        svg
+          .selectAll('.dot')
+          .attr('cx', (d) => newXScale(d.time))
+          .attr('cy', (d) => newYScale(d.concentration));
+      }
     }
   };
 
