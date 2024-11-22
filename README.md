@@ -2,7 +2,7 @@
 # DoseScope
 > Track and monitor substances in the bloodstream with precision.
 
-**DoseScope** is a tracking application designed to monitor the presence of various substances—such as drugs, foods, and supplements—in the bloodstream. It provides users with interactive tools to manage intake schedules, visualize metabolization rates, and analyze health data over time. Built with Electron, React, and D3.js, DoseScope offers a robust and responsive experience.
+**DoseScope** is a tracking application designed to predict the concentration of medications the bloodstream  over time, based on protocols designed by healthcare professionals. It provides users with interactive tools to manage intake schedules, visualize metabolization rates, and analyze health data over time. Built with Electron, React, and D3.js, DoseScope offers a robust and responsive experience.
 
 ## Installing / Getting Started
 
@@ -36,8 +36,8 @@ This will start the application in development mode, and the Electron window sho
 
 ### Core Functionality
 - **Interactive Graphing**: Track and analyze substance levels over time using a responsive graphing interface powered by D3.js.
-  - Pan and zoom like a graphing calculator or TradingView.
-  - Hover over data points to view detailed tooltips.
+  - Navigate the plotted graph using pan, zoom, and other tools.
+  - Hover over data points to view details.
 - **Customizable Protocols**:
   - Create, edit, and manage intake schedules for substances.
   - Define dosage, offset, frequency, and duration with intuitive controls.
@@ -115,17 +115,7 @@ This command launches the Electron application using the production build.
 
 - **Performance**: For large datasets, the graph may experience some lag during zooming and panning. Optimization efforts are ongoing.
 - **Error Handling**: Ensure all inputs (e.g., dosage, frequency) are properly validated to prevent crashes.
-
-## Contributing
-
-We welcome contributions! To contribute:
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -m 'Add new feature'`).
-4. Push the branch (`git push origin feature-branch`).
-5. Open a Pull Request.
-
-Please refer to our `CONTRIBUTING.md` for detailed guidelines.
+- **Misc.**: Some bugs with inputting data, sometimes menus do not pop up correctly
 
 ## Links
 
