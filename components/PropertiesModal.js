@@ -1,4 +1,5 @@
 // components/PropertiesModal.js
+
 import React, { useState } from 'react';
 
 const PropertiesModal = ({ protocol, onClose, onUpdate }) => {
@@ -77,3 +78,4 @@ const PropertiesModal = ({ protocol, onClose, onUpdate }) => {
 };
 
 export default PropertiesModal;
+

@@ -1,9 +1,11 @@
 // App.js
+
 import React, { useState, useEffect } from 'react';
 import Graph from './components/Graph';
 import Sidebar from './components/Sidebar';
 import NewProtocolModal from './components/NewProtocolModal';
 import PropertiesModal from './components/PropertiesModal';
+import ScaleAdjustmentModal from './components/ScaleAdjustmentModal';
 import './styles.css';
 
 function App() {
@@ -11,6 +13,12 @@ function App() {
   const [currentProtocol, setCurrentProtocol] = useState(null);
   const [showNewProtocolModal, setShowNewProtocolModal] = useState(false);
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
+  const [showScaleAdjustmentModal, setShowScaleAdjustmentModal] = useState(false);
+  const [scaleSettings, setScaleSettings] = useState({
+    timeUnit: 'hours',
+    minorTickInterval: 1,
+    majorTickInterval: 24,
+  });
 
   useEffect(() => {
     // Listen for 'new-protocol' from main process
@@ -25,6 +33,11 @@ function App() {
       } else {
         alert('No protocol selected.');
       }
+    });
+
+    // Listen for 'open-scale-adjustment' from main process
+    window.electronAPI.receive('open-scale-adjustment', () => {
+      setShowScaleAdjustmentModal(true);
     });
   }, [currentProtocol]);
 
@@ -50,6 +63,11 @@ function App() {
     setShowPropertiesModal(false);
   };
 
+  const handleScaleAdjustment = (newScaleSettings) => {
+    setScaleSettings(newScaleSettings);
+    setShowScaleAdjustmentModal(false);
+  };
+
   return (
     <div className="app">
       {showNewProtocolModal && (
@@ -65,6 +83,12 @@ function App() {
           onUpdate={handleUpdateProtocol}
         />
       )}
+      {showScaleAdjustmentModal && (
+        <ScaleAdjustmentModal
+          onClose={() => setShowScaleAdjustmentModal(false)}
+          onSave={handleScaleAdjustment}
+        />
+      )}
       {currentProtocol ? (
         <>
           <Sidebar
@@ -73,7 +97,7 @@ function App() {
             protocols={protocols}
             setProtocols={setProtocols}
           />
-          <Graph protocol={currentProtocol} />
+          <Graph protocol={currentProtocol} scaleSettings={scaleSettings} />
         </>
       ) : (
         <div className="empty-screen">

@@ -1,7 +1,9 @@
+// components/AddCompoundForm.js
+
 import React, { useState } from 'react';
 
-const AddDrugForm = () => {
-  const [drugData, setDrugData] = useState({
+const AddCompoundForm = () => {
+  const [compoundData, setCompoundData] = useState({
     name: '',
     type: '',
     category: '',
@@ -17,21 +19,21 @@ const AddDrugForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDrugData({ ...drugData, [name]: value });
+    setCompoundData({ ...compoundData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!drugData.name || !drugData.halfLife || !drugData.Cmax || !drugData.bioavailability) {
+    if (!compoundData.name || !compoundData.halfLife || !compoundData.Cmax || !compoundData.bioavailability) {
       alert('Please fill out all required fields.');
       return;
     }
 
     try {
-      await window.electronAPI.invoke('add-compound', drugData);
-      alert('Drug saved successfully!');
-      setDrugData({
+      await window.electronAPI.invoke('add-compound', compoundData);
+      alert('Compound saved successfully!');
+      setCompoundData({
         name: '',
         type: '',
         category: '',
@@ -45,52 +47,52 @@ const AddDrugForm = () => {
         notes: '',
       });
     } catch (error) {
-      console.error('Error saving drug:', error);
-      alert('Failed to save drug.');
+      console.error('Error saving compound:', error);
+      alert('Failed to save compound.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="add-drug-form">
-      <h2>Add New Drug</h2>
+    <form onSubmit={handleSubmit} className="add-compound-form">
+      <h2>Add New Compound</h2>
       <input
         type="text"
         name="name"
-        placeholder="Drug Name (required)"
-        value={drugData.name}
+        placeholder="Compound Name (required)"
+        value={compoundData.name}
         onChange={handleChange}
       />
       <input
         type="text"
         name="type"
         placeholder="Type (optional)"
-        value={drugData.type}
+        value={compoundData.type}
         onChange={handleChange}
       />
       <input
         type="text"
         name="category"
         placeholder="Category (optional)"
-        value={drugData.category}
+        value={compoundData.category}
         onChange={handleChange}
       />
       <input
         type="number"
         name="molecularWeight"
         placeholder="Molecular Weight (optional)"
-        value={drugData.molecularWeight}
+        value={compoundData.molecularWeight}
         onChange={handleChange}
       />
       <input
         type="number"
         name="halfLife"
         placeholder="Half-Life (hours, required)"
-        value={drugData.halfLife}
+        value={compoundData.halfLife}
         onChange={handleChange}
       />
       <select
         name="halfLifeUnit"
-        value={drugData.halfLifeUnit}
+        value={compoundData.halfLifeUnit}
         onChange={handleChange}
       >
         <option value="hours">Hours</option>
@@ -100,39 +102,39 @@ const AddDrugForm = () => {
         type="number"
         name="Cmax"
         placeholder="Cmax (ng/ml, required)"
-        value={drugData.Cmax}
+        value={compoundData.Cmax}
         onChange={handleChange}
       />
       <input
         type="number"
         name="Tmax"
         placeholder="Tmax (hours, optional)"
-        value={drugData.Tmax}
+        value={compoundData.Tmax}
         onChange={handleChange}
       />
       <input
         type="number"
         name="bioavailability"
         placeholder="Bioavailability (0-1, required)"
-        value={drugData.bioavailability}
+        value={compoundData.bioavailability}
         onChange={handleChange}
       />
       <input
         type="text"
         name="model"
         placeholder="Model (optional)"
-        value={drugData.model}
+        value={compoundData.model}
         onChange={handleChange}
       />
       <textarea
         name="notes"
         placeholder="Notes (optional)"
-        value={drugData.notes}
+        value={compoundData.notes}
         onChange={handleChange}
       ></textarea>
-      <button type="submit">Add Drug</button>
+      <button type="submit">Add Compound</button>
     </form>
   );
 };
 
-export default AddDrugForm;
+export default AddCompoundForm;

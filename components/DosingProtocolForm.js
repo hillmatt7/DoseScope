@@ -1,10 +1,11 @@
-// DosingProtocolForm.js
+// components/DosingProtocolForm.js
+
 import React, { useState, useEffect } from 'react';
 
 const DosingProtocolForm = () => {
   const [protocolData, setProtocolData] = useState({
     protocolTitle: '',
-    drugName: '',
+    compoundName: '',
     dose: '',
     doseUnit: 'mg',
     frequency: '',
@@ -15,24 +16,24 @@ const DosingProtocolForm = () => {
     startDate: '',
   });
 
-  const [drugSearchTerm, setDrugSearchTerm] = useState('');
-  const [drugResults, setDrugResults] = useState([]);
-  const [allDrugs, setAllDrugs] = useState([]);
+  const [compoundSearchTerm, setCompoundSearchTerm] = useState('');
+  const [compoundResults, setCompoundResults] = useState([]);
+  const [allCompounds, setAllCompounds] = useState([]);
 
   useEffect(() => {
-    const fetchDrugs = async () => {
-      const response = await window.electronAPI.invoke('get-drugs');
-      setAllDrugs(response);
+    const fetchCompounds = async () => {
+      const response = await window.electronAPI.invoke('get-compounds');
+      setAllCompounds(response);
     };
-    fetchDrugs();
+    fetchCompounds();
   }, []);
 
   useEffect(() => {
-    const results = allDrugs.filter((drug) =>
-      drug.name.toLowerCase().includes(drugSearchTerm.toLowerCase())
+    const results = allCompounds.filter((compound) =>
+      compound.name.toLowerCase().includes(compoundSearchTerm.toLowerCase())
     );
-    setDrugResults(results);
-  }, [drugSearchTerm, allDrugs]);
+    setCompoundResults(results);
+  }, [compoundSearchTerm, allCompounds]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,8 +51,8 @@ const DosingProtocolForm = () => {
       alert('Please enter the protocol title.');
       return;
     }
-    if (!protocolData.drugName) {
-      alert('Please select a drug.');
+    if (!protocolData.compoundName) {
+      alert('Please select a compound.');
       return;
     }
     if (isNaN(parseFloat(protocolData.dose))) {
@@ -80,7 +81,7 @@ const DosingProtocolForm = () => {
     alert('Protocol added successfully!');
     setProtocolData({
       protocolTitle: '',
-      drugName: '',
+      compoundName: '',
       dose: '',
       doseUnit: 'mg',
       frequency: '',
@@ -90,7 +91,7 @@ const DosingProtocolForm = () => {
       lengthUnit: 'weeks',
       startDate: '',
     });
-    setDrugSearchTerm('');
+    setCompoundSearchTerm('');
   };
 
   return (
@@ -102,25 +103,25 @@ const DosingProtocolForm = () => {
         value={protocolData.protocolTitle}
         onChange={handleChange}
       />
-      {/* Drug Search */}
+      {/* Compound Search */}
       <input
         type="text"
-        placeholder="Search Drug..."
-        value={drugSearchTerm}
-        onChange={(e) => setDrugSearchTerm(e.target.value)}
+        placeholder="Search Compound..."
+        value={compoundSearchTerm}
+        onChange={(e) => setCompoundSearchTerm(e.target.value)}
       />
       <ul>
-        {drugResults.map((drug) => (
-          <li key={drug.name}>
+        {compoundResults.map((compound) => (
+          <li key={compound.name}>
             <button
               type="button"
               onClick={() => {
-                setProtocolData({ ...protocolData, drugName: drug.name });
-                setDrugSearchTerm(drug.name);
-                setDrugResults([]);
+                setProtocolData({ ...protocolData, compoundName: compound.name });
+                setCompoundSearchTerm(compound.name);
+                setCompoundResults([]);
               }}
             >
-              {drug.name}
+              {compound.name}
             </button>
           </li>
         ))}

@@ -1,4 +1,5 @@
-// ProtocolBuilder.js
+// components/ProtocolBuilder.js
+
 import React, { useState, useEffect } from 'react';
 
 const ProtocolBuilder = () => {
@@ -13,7 +14,7 @@ const ProtocolBuilder = () => {
   });
 
   const [compound, setCompound] = useState({
-    drugName: '',
+    compoundName: '',
     dose: '',
     doseUnit: 'mg',
     offsetDays: 0,
@@ -25,25 +26,32 @@ const ProtocolBuilder = () => {
     compare: false,
   });
 
-  const [showDrugSearch, setShowDrugSearch] = useState(false);
-  const [drugSearchTerm, setDrugSearchTerm] = useState('');
-  const [drugResults, setDrugResults] = useState([]);
-  const [allDrugs, setAllDrugs] = useState([]);
+  const [showCompoundSearch, setShowCompoundSearch] = useState(false);
+  const [compoundSearchTerm, setCompoundSearchTerm] = useState('');
+  const [compoundResults, setCompoundResults] = useState([]);
+  const [allCompounds, setAllCompounds] = useState([]);
+
+  // Fetch compounds from local_library
+  const fetchCompounds = async () => {
+    try {
+      const response = await window.electronAPI.invoke('get-compounds');
+      setAllCompounds(response);
+    } catch (error) {
+      console.error('Error fetching compounds:', error);
+      alert('Failed to load compounds.');
+    }
+  };
 
   useEffect(() => {
-    const fetchDrugs = async () => {
-      const response = await window.electronAPI.invoke('get-drugs');
-      setAllDrugs(response);
-    };
-    fetchDrugs();
+    fetchCompounds();
   }, []);
 
   useEffect(() => {
-    const results = allDrugs.filter((drug) =>
-      drug.name.toLowerCase().includes(drugSearchTerm.toLowerCase())
+    const results = allCompounds.filter((comp) =>
+      comp.name.toLowerCase().includes(compoundSearchTerm.toLowerCase())
     );
-    setDrugResults(results);
-  }, [drugSearchTerm, allDrugs]);
+    setCompoundResults(results);
+  }, [compoundSearchTerm, allCompounds]);
 
   const handleProtocolChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -62,13 +70,21 @@ const ProtocolBuilder = () => {
   };
 
   const addCompound = () => {
+    if (!compound.compoundName) {
+      alert('Please select a compound.');
+      return;
+    }
+    if (!compound.dose || isNaN(compound.dose)) {
+      alert('Please enter a valid dose.');
+      return;
+    }
     setProtocolData({
       ...protocolData,
       compounds: [...protocolData.compounds, compound],
     });
     // Reset compound form
     setCompound({
-      drugName: '',
+      compoundName: '',
       dose: '',
       doseUnit: 'mg',
       offsetDays: 0,
@@ -92,7 +108,7 @@ const ProtocolBuilder = () => {
       compounds: [],
     });
     setCompound({
-      drugName: '',
+      compoundName: '',
       dose: '',
       doseUnit: 'mg',
       offsetDays: 0,
@@ -103,8 +119,8 @@ const ProtocolBuilder = () => {
       accumulate: false,
       compare: false,
     });
-    setShowDrugSearch(false);
-    setDrugSearchTerm('');
+    setShowCompoundSearch(false);
+    setCompoundSearchTerm('');
   };
 
   const handleSubmit = () => {
@@ -122,6 +138,7 @@ const ProtocolBuilder = () => {
       return;
     }
 
+    // Save the protocol data (You may need to implement this IPC handler)
     window.electronAPI.send('add-protocol', protocolData);
     alert('Protocol saved successfully!');
     resetProtocol();
@@ -186,27 +203,27 @@ const ProtocolBuilder = () => {
       </div>
       <h3>Compound(s)</h3>
       <div>
-        <button onClick={() => setShowDrugSearch(true)}>Add Drug</button>
-        {showDrugSearch && (
-          <div className="drug-search">
+        <button onClick={() => setShowCompoundSearch(true)}>Add Compound</button>
+        {showCompoundSearch && (
+          <div className="compound-search">
             <input
               type="text"
-              placeholder="Search Drug..."
-              value={drugSearchTerm}
-              onChange={(e) => setDrugSearchTerm(e.target.value)}
+              placeholder="Search Compound..."
+              value={compoundSearchTerm}
+              onChange={(e) => setCompoundSearchTerm(e.target.value)}
             />
             <ul>
-              {drugResults.map((drug) => (
-                <li key={drug.name}>
+              {compoundResults.map((comp) => (
+                <li key={comp.name}>
                   <button
                     type="button"
                     onClick={() => {
-                      setCompound({ ...compound, drugName: drug.name });
-                      setDrugSearchTerm('');
-                      setShowDrugSearch(false);
+                      setCompound({ ...compound, compoundName: comp.name });
+                      setCompoundSearchTerm('');
+                      setShowCompoundSearch(false);
                     }}
                   >
-                    {drug.name}
+                    {comp.name}
                   </button>
                 </li>
               ))}
@@ -214,9 +231,9 @@ const ProtocolBuilder = () => {
           </div>
         )}
       </div>
-      {compound.drugName && (
+      {compound.compoundName && (
         <div className="compound-details">
-          <h4>{compound.drugName}</h4>
+          <h4>{compound.compoundName}</h4>
           <div>
             <label>
               Dosage:

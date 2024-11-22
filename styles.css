@@ -1,6 +1,4 @@
-/* styles.css */
-
-/* Reset and base styles */
+/* Reset and Base Styles */
 body, html, #root {
   margin: 0;
   padding: 0;
@@ -18,13 +16,14 @@ button {
   color: #ffffff;
   padding: 10px;
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #1177bb;
 }
 
-input, select {
+input, select, textarea {
   background-color: #45494e;
   border: none;
   color: #ffffff;
@@ -32,9 +31,10 @@ input, select {
   border-radius: 4px;
   margin-bottom: 10px;
   width: 100%;
+  box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
   border: 1px solid #0e639c;
 }
@@ -44,14 +44,25 @@ label {
   margin-bottom: 5px;
 }
 
-/* App layout */
+span.unit {
+  margin-left: 5px;
+  font-size: 12px;
+  color: #cccccc;
+}
+
+.placeholder {
+  color: #aaaaaa;
+}
+
+/* App Layout */
 .app {
   display: flex;
   height: 100vh;
   background-color: #1e1e1e;
+  position: relative;
 }
 
-/* Empty screen */
+/* Empty Screen */
 .empty-screen {
   flex: 1;
   display: flex;
@@ -102,6 +113,7 @@ label {
   background-color: #3a3d41;
   padding: 10px;
   cursor: move;
+  user-select: none;
 }
 
 .sidebar button {
@@ -111,39 +123,14 @@ label {
   margin: 5px;
   text-align: left;
   color: #ffffff;
+  width: calc(100% - 20px);
 }
 
 .sidebar button:hover {
   background-color: #45494e;
 }
 
-/* Protocol Tabs */
-.protocol-tabs {
-  display: flex;
-  background-color: #2d2d2d;
-  border-bottom: 1px solid #444444;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
-
-.protocol-tab {
-  padding: 10px;
-  cursor: pointer;
-  color: #ffffff;
-}
-
-.protocol-tab.active {
-  background-color: #1e1e1e;
-}
-
-.protocol-tab:hover {
-  background-color: #3a3d41;
-}
-
-/* Compound list at the bottom of the sidebar */
-.compound-list {
+.sidebar .compound-list {
   background-color: #1e1e1e;
   max-height: 200px;
   overflow-y: auto;
@@ -151,17 +138,17 @@ label {
   border-top: 1px solid #3a3d41;
 }
 
-.compound-item {
+.sidebar .compound-item {
   display: flex;
   justify-content: space-between;
   padding: 5px 10px;
 }
 
-.compound-item:hover {
+.sidebar .compound-item:hover {
   background-color: #3a3d41;
 }
 
-.compound-item button {
+.sidebar .compound-item button {
   background: none;
   border: none;
   color: #ff5c5c;
@@ -169,11 +156,11 @@ label {
   cursor: pointer;
 }
 
-.compound-item button:hover {
+.sidebar .compound-item button:hover {
   color: #ff1c1c;
 }
 
-/* Graph area */
+/* Graph Area */
 .graph-area {
   flex: 1;
   background-color: #1e1e1e;
@@ -183,7 +170,7 @@ label {
   overflow: hidden; /* Ensure that overflowing content is hidden */
 }
 
-/* Style SVG elements */
+/* Style SVG Elements */
 .graph-area svg {
   width: 100%;
   height: 100%;
@@ -213,7 +200,19 @@ label {
   stroke-width: 0;
 }
 
-/* Tooltip styling */
+.graph-area .line.total-line {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-width: 2;
+}
+
+.graph-area .dot {
+  fill: #1f77b4;
+  stroke: #ffffff;
+  stroke-width: 1px;
+}
+
+/* Tooltip Styling */
 .tooltip {
   position: absolute;
   text-align: center;
@@ -225,10 +224,10 @@ label {
   border-radius: 8px;
   pointer-events: none;
   color: #000000;
-  z-index: 1000;
+  z-index: 1001;
 }
 
-/* Overlays */
+/* Overlay */
 .overlay {
   position: absolute;
   top: 50px;
@@ -250,6 +249,7 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  user-select: none;
 }
 
 .overlay-header button {
@@ -270,6 +270,18 @@ label {
   display: block;
 }
 
+.overlay-content input,
+.overlay-content select,
+.overlay-content textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: #45494e;
+  border: none;
+  color: #ffffff;
+  border-radius: 4px;
+}
+
 .overlay-content button {
   background-color: #0e639c;
   border: none;
@@ -284,34 +296,51 @@ label {
   background-color: #1177bb;
 }
 
-/* Draggable handle */
-.draggable {
-  cursor: move;
+/* Scale Adjustment Modal */
+.scale-adjustment-modal {
+  position: absolute;
+  top: 50px;
+  left: 300px;
+  width: 400px;
+  background-color: #2d2d2d;
+  color: #ffffff;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Dropdowns */
-select {
+.scale-adjustment-modal .overlay-header {
+  background-color: #3a3d41;
+  padding: 10px;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.scale-adjustment-modal .overlay-content {
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.scale-adjustment-modal label {
+  margin-bottom: 5px;
+  display: block;
+}
+
+.scale-adjustment-modal input,
+.scale-adjustment-modal select {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
   background-color: #45494e;
   border: none;
   color: #ffffff;
-  padding: 8px;
   border-radius: 4px;
-  appearance: none;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #2d2d2d;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #555555;
-  border-radius: 5px;
-  border: 2px solid #2d2d2d;
 }
 
 /* Responsive Design */
@@ -320,38 +349,55 @@ select {
     width: 200px;
   }
 
-  .overlay {
+  .overlay,
+  .scale-adjustment-modal {
     width: 80%;
     left: 10%;
   }
+
+  .overlay-header, .scale-adjustment-modal .overlay-header {
+    padding: 8px;
+  }
+
+  .overlay-content, .scale-adjustment-modal .overlay-content {
+    padding: 8px;
+  }
+
+  .create-protocol .plus-sign {
+    font-size: 80px;
+  }
+
+  .create-protocol .create-text {
+    font-size: 16px;
+  }
 }
 
-/* Hover effects */
+/* Hover Effects */
 button:hover {
   opacity: 0.9;
 }
 
-input:hover, select:hover {
+input:hover, select:hover, textarea:hover {
   background-color: #505355;
 }
 
-/* Input focus */
+/* Input Focus */
 input:focus, select:focus, textarea:focus {
   outline: none;
   border: 1px solid #0e639c;
 }
 
-/* Form styling */
+/* Form Styling */
 form {
   display: flex;
   flex-direction: column;
 }
 
-form input, form select, form label {
+form input, form select, form label, form textarea {
   margin-bottom: 10px;
 }
 
-/* Table styling (if any) */
+/* Table Styling (if any) */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -392,4 +438,23 @@ a:hover {
 
 .graph-area svg:active {
   cursor: grabbing;
+}
+
+/* Adjust Graph Area for Tooltip */
+.graph-area {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  text-align: center;
+  width: auto;
+  padding: 6px;
+  font: 12px sans-serif;
+  background: #ffffff;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+  color: #000000;
+  z-index: 1001;
 }

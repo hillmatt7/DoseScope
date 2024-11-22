@@ -1,4 +1,5 @@
 // components/Overlay.js
+
 import React, { useState, useEffect } from 'react';
 import Draggable from 'react-draggable';
 
@@ -6,12 +7,17 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
   const [compounds, setCompounds] = useState([]);
   const [compoundData, setCompoundData] = useState({
     name: '',
+    type: '',
+    category: '',
     molecularWeight: '',
     halfLife: '',
     halfLifeUnit: 'hours',
     Cmax: '',
     Tmax: '',
+    TmaxUnit: 'hours',
     bioavailability: '',
+    model: '',
+    notes: '',
   });
   const [selectedCompound, setSelectedCompound] = useState(null);
   const [newCompoundData, setNewCompoundData] = useState({
@@ -26,13 +32,20 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     compare: false,
   });
 
-  useEffect(() => {
-    const fetchCompounds = async () => {
+  // Fetch compounds from local_library
+  const fetchCompounds = async () => {
+    try {
       const response = await window.electronAPI.invoke('get-compounds');
       setCompounds(response);
-    };
+    } catch (error) {
+      console.error('Error fetching compounds:', error);
+      alert('Failed to load compounds.');
+    }
+  };
+
+  useEffect(() => {
     fetchCompounds();
-  }, []);
+  }, [type]); // Re-fetch compounds when overlay type changes
 
   const handleAddCompound = () => {
     if (!protocol) {
@@ -41,6 +54,10 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     }
     if (!selectedCompound) {
       alert('Please select a compound.');
+      return;
+    }
+    if (!newCompoundData.dose || isNaN(newCompoundData.dose)) {
+      alert('Please enter a valid dose.');
       return;
     }
     // Add compound to protocol
@@ -61,17 +78,46 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
   };
 
   const handleSaveCompound = async () => {
-    if (!newCompound.name || !newCompound.halfLife || !newCompound.Cmax) {
-      alert('Please fill out all required fields.');
-      return;
+    // Validate required fields
+    const requiredFields = ['name', 'halfLife', 'Cmax', 'bioavailability'];
+    for (const field of requiredFields) {
+      if (!compoundData[field]) {
+        alert(`Please fill out the required field: ${field}`);
+        return;
+      }
+    }
+
+    // Ensure numeric fields are numbers
+    const numericFields = ['molecularWeight', 'halfLife', 'Cmax', 'Tmax', 'bioavailability'];
+    for (const field of numericFields) {
+      if (compoundData[field] && isNaN(parseFloat(compoundData[field]))) {
+        alert(`Please enter a valid number for ${field}`);
+        return;
+      }
     }
 
     try {
-      await window.electronAPI.invoke('add-compound', newCompound);
+      await window.electronAPI.invoke('add-compound', compoundData);
       alert('Compound saved successfully!');
+      await fetchCompounds(); // Refresh compounds list
+      setCompoundData({
+        name: '',
+        type: '',
+        category: '',
+        molecularWeight: '',
+        halfLife: '',
+        halfLifeUnit: 'hours',
+        Cmax: '',
+        Tmax: '',
+        TmaxUnit: 'hours',
+        bioavailability: '',
+        model: '',
+        notes: '',
+      });
       closeOverlay();
     } catch (error) {
       console.error('Error saving compound:', error);
+      alert('Failed to save compound.');
     }
   };
 
@@ -90,15 +136,24 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
     setSelectedCompound(null);
   };
 
-  const handleNewCompound = () => {
-    // Save new compound
-    window.electronAPI.send('add-compound', compoundData);
-    alert('Compound added successfully!');
-    closeOverlay();
+  const handleCompoundDataChange = (e) => {
+    const { name, value } = e.target;
+    setCompoundData({ ...compoundData, [name]: value });
+  };
+
+  const handleNewCompoundDataChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewCompoundData({
+      ...newCompoundData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
 
   return (
-    <Draggable handle=".overlay-header">
+    <Draggable
+      handle=".overlay-header"
+      cancel=".overlay-content input, .overlay-content textarea, .overlay-content select"
+    >
       <div className="overlay">
         <div className="overlay-header">
           <span>
@@ -113,29 +168,45 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
         <div className="overlay-content">
           {type === 'newCompound' && (
             <div>
+              <h2>Add New Compound</h2>
               <label>
                 Compound Name:
                 <input
                   type="text"
                   name="name"
                   value={compoundData.name}
-                  onChange={(e) =>
-                    setCompoundData({ ...compoundData, name: e.target.value })
-                  }
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter compound name"
                 />
               </label>
               <label>
-                Molecular Weight:
+                Type:
+                <input
+                  type="text"
+                  name="type"
+                  value={compoundData.type}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter type"
+                />
+              </label>
+              <label>
+                Category:
+                <input
+                  type="text"
+                  name="category"
+                  value={compoundData.category}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter category"
+                />
+              </label>
+              <label>
+                Molecular Weight (g/mol):
                 <input
                   type="number"
                   name="molecularWeight"
                   value={compoundData.molecularWeight}
-                  onChange={(e) =>
-                    setCompoundData({
-                      ...compoundData,
-                      molecularWeight: e.target.value,
-                    })
-                  }
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter molecular weight"
                 />
               </label>
               <label>
@@ -144,19 +215,13 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                   type="number"
                   name="halfLife"
                   value={compoundData.halfLife}
-                  onChange={(e) =>
-                    setCompoundData({ ...compoundData, halfLife: e.target.value })
-                  }
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter half-life"
                 />
                 <select
                   name="halfLifeUnit"
                   value={compoundData.halfLifeUnit}
-                  onChange={(e) =>
-                    setCompoundData({
-                      ...compoundData,
-                      halfLifeUnit: e.target.value,
-                    })
-                  }
+                  onChange={handleCompoundDataChange}
                 >
                   <option value="seconds">Seconds</option>
                   <option value="minutes">Minutes</option>
@@ -168,23 +233,32 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                 Cmax:
                 <input
                   type="number"
-                  name="cmax"
-                  value={compoundData.cmax}
-                  onChange={(e) =>
-                    setCompoundData({ ...compoundData, cmax: e.target.value })
-                  }
+                  name="Cmax"
+                  value={compoundData.Cmax}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter Cmax"
                 />
+                <span>ng/ml</span>
               </label>
               <label>
                 Tmax:
                 <input
                   type="number"
-                  name="tmax"
-                  value={compoundData.tmax}
-                  onChange={(e) =>
-                    setCompoundData({ ...compoundData, tmax: e.target.value })
-                  }
+                  name="Tmax"
+                  value={compoundData.Tmax}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter Tmax"
                 />
+                <select
+                  name="TmaxUnit"
+                  value={compoundData.TmaxUnit}
+                  onChange={handleCompoundDataChange}
+                >
+                  <option value="seconds">Seconds</option>
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                  <option value="days">Days</option>
+                </select>
               </label>
               <label>
                 Bioavailability:
@@ -192,12 +266,33 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                   type="number"
                   name="bioavailability"
                   value={compoundData.bioavailability}
-                  onChange={(e) =>
-                    setCompoundData({ ...compoundData, bioavailability: e.target.value })
-                  }
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter value between 0 and 1"
+                  min="0"
+                  max="1"
+                  step="0.01"
                 />
               </label>
-              <button onClick={handleNewCompound}>Save Compound</button>
+              <label>
+                Model:
+                <input
+                  type="text"
+                  name="model"
+                  value={compoundData.model}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter model"
+                />
+              </label>
+              <label>
+                Notes:
+                <textarea
+                  name="notes"
+                  value={compoundData.notes}
+                  onChange={handleCompoundDataChange}
+                  placeholder="Enter any notes"
+                ></textarea>
+              </label>
+              <button onClick={handleSaveCompound}>Save Compound</button>
             </div>
           )}
           {type === 'addCompound' && (
@@ -228,22 +323,13 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                       type="number"
                       name="dose"
                       value={newCompoundData.dose}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          dose: e.target.value,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
+                      placeholder="Enter dosage"
                     />
                     <select
                       name="doseUnit"
                       value={newCompoundData.doseUnit}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          doseUnit: e.target.value,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
                     >
                       <option value="mcg">mcg</option>
                       <option value="mg">mg</option>
@@ -256,12 +342,8 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                       type="number"
                       name="offsetDays"
                       value={newCompoundData.offsetDays}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          offsetDays: e.target.value,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
+                      placeholder="Enter offset in days"
                     />
                   </label>
                   <label>
@@ -269,12 +351,7 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                     <select
                       name="dosingSchedule"
                       value={newCompoundData.dosingSchedule}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          dosingSchedule: e.target.value,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
                     >
                       <option value="4 times a day">4 times a day</option>
                       <option value="3 times a day">3 times a day</option>
@@ -310,30 +387,22 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                         type="number"
                         name="durationFrom"
                         value={newCompoundData.durationFrom}
-                        onChange={(e) =>
-                          setNewCompoundData({
-                            ...newCompoundData,
-                            durationFrom: e.target.value,
-                          })
-                        }
+                        onChange={handleNewCompoundDataChange}
                         min="1"
                         max={protocol.length}
                         style={{ marginLeft: '5px', marginRight: '15px' }}
+                        placeholder="Start week"
                       />
                       Through Week:
                       <input
                         type="number"
                         name="durationTo"
                         value={newCompoundData.durationTo}
-                        onChange={(e) =>
-                          setNewCompoundData({
-                            ...newCompoundData,
-                            durationTo: e.target.value,
-                          })
-                        }
+                        onChange={handleNewCompoundDataChange}
                         min={newCompoundData.durationFrom}
                         max={protocol.length}
                         style={{ marginLeft: '5px' }}
+                        placeholder="End week"
                       />
                     </div>
                   </label>
@@ -345,12 +414,7 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                       min="-100"
                       max="100"
                       value={newCompoundData.adjustLevels}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          adjustLevels: e.target.value,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
                     />
                   </label>
                   <label>
@@ -359,12 +423,7 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                       type="checkbox"
                       name="accumulate"
                       checked={newCompoundData.accumulate}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          accumulate: e.target.checked,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
                     />
                   </label>
                   <label>
@@ -373,12 +432,7 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
                       type="checkbox"
                       name="compare"
                       checked={newCompoundData.compare}
-                      onChange={(e) =>
-                        setNewCompoundData({
-                          ...newCompoundData,
-                          compare: e.target.checked,
-                        })
-                      }
+                      onChange={handleNewCompoundDataChange}
                     />
                   </label>
                   <div style={{ display: 'flex', marginTop: '10px' }}>
@@ -417,12 +471,20 @@ const Overlay = ({ type, closeOverlay, protocol, setProtocol }) => {
               {selectedCompound && (
                 <div>
                   <h3>{selectedCompound.name}</h3>
+                  <p>Type: {selectedCompound.type}</p>
+                  <p>Category: {selectedCompound.category}</p>
                   <p>Molecular Weight: {selectedCompound.molecularWeight}</p>
                   <p>
                     Half-Life: {selectedCompound.halfLife}{' '}
                     {selectedCompound.halfLifeUnit}
                   </p>
-                  {/* Display other compound details as needed */}
+                  <p>Cmax: {selectedCompound.Cmax} ng/ml</p>
+                  <p>
+                    Tmax: {selectedCompound.Tmax} {selectedCompound.TmaxUnit}
+                  </p>
+                  <p>Bioavailability: {selectedCompound.bioavailability}</p>
+                  <p>Model: {selectedCompound.model}</p>
+                  <p>Notes: {selectedCompound.notes}</p>
                 </div>
               )}
               <button onClick={closeOverlay}>Close</button>

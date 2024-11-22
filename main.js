@@ -1,9 +1,20 @@
 // main.js
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 let mainWindow;
+
+function ensureLocalLibraryExists() {
+  const dataPath = path.join(app.getPath('userData'), 'local_library');
+  if (!fs.existsSync(dataPath)) {
+    fs.mkdirSync(dataPath, { recursive: true });
+    console.log(`Directory '${dataPath}' created.`);
+  } else {
+    console.log(`Directory '${dataPath}' already exists.`);
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -24,12 +35,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  ensureLocalLibraryExists();
   createWindow();
-
-  const dataPath = path.join(app.getPath('userData'), 'local_library');
-  if (!fs.existsSync(dataPath)) {
-    fs.mkdirSync(dataPath);
-  }
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -40,7 +47,7 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// Menu template for File > New
+// Menu template for File > New and View > Adjust Graph Scales
 const menuTemplate = [
   {
     label: 'File',
@@ -55,61 +62,89 @@ const menuTemplate = [
       { role: 'quit' },
     ],
   },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Adjust Graph Scales',
+        click() {
+          mainWindow.webContents.send('open-scale-adjustment');
+        },
+      },
+    ],
+  },
 ];
 
 // IPC handlers
 
-ipcMain.on('add-compound', (event, compoundData) => {
-  
-  // Check if local_library directory exists
+ipcMain.handle('add-compound', async (event, compoundData) => {
+  try {
+    ensureLocalLibraryExists();
+    const directory = path.join(app.getPath('userData'), 'local_library');
+    const compoundFile = path.join(directory, `${compoundData.name}.cmpd`);
 
-const fs = require('fs');
-const path = require('path');
+    // Ensure numeric fields are properly formatted
+    const numericFields = ['molecularWeight', 'halfLife', 'Cmax', 'Tmax', 'bioavailability'];
+    numericFields.forEach((field) => {
+      if (compoundData[field] === '') {
+        compoundData[field] = '0';
+      }
+    });
 
-// Define the directory name
-const directory = path.join(__dirname, 'local_library');
+    const compoundContent = `[Compound]\n${Object.entries(compoundData)
+      .map(([key, value]) => `${key} = ${value}`)
+      .join('\n')}\n`;
 
-// Check if the directory exists
-if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true });
-    console.log(`Directory '${directory}' created.`);
-} else {
-    console.log(`Directory '${directory}' already exists.`);
-}
+    fs.writeFileSync(compoundFile, compoundContent);
+    console.log(`Compound saved to ${compoundFile}`);
 
-  const compoundFile = path.join(
-    app.getPath('userData'),
-    'local_library',
-    `${compoundData.name}.drug`
-  );
-  const drugContent = Object.entries(compoundData)
-    .map(([key, value]) => `${key} = ${value}`)
-    .join('\n');
-  fs.writeFileSync(compoundFile, `[Drug]\n${drugContent}\n`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving compound:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('get-compounds', () => {
-  const dataPath = path.join(app.getPath('userData'), 'local_library');
-  const files = fs.readdirSync(dataPath);
-  const compounds = files
-    .filter((file) => file.endsWith('.drug'))
-    .map((file) => parseDrugFile(path.join(dataPath, file)));
-  return compounds;
+ipcMain.handle('get-compounds', async () => {
+  try {
+    ensureLocalLibraryExists();
+    const dataPath = path.join(app.getPath('userData'), 'local_library');
+    const files = fs.readdirSync(dataPath);
+    const compounds = files
+      .filter((file) => file.endsWith('.cmpd'))
+      .map((file) => parseCompoundFile(path.join(dataPath, file)));
+    console.log(`Compounds loaded from ${dataPath}`);
+    return compounds;
+  } catch (error) {
+    console.error('Error reading compounds:', error);
+    throw error;
+  }
 });
 
-function parseDrugFile(filePath) {
+function parseCompoundFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  const drugData = {};
+  const compoundData = {};
   content.split('\n').forEach((line) => {
     if (line.startsWith('[') && line.endsWith(']')) return; // Skip section headers
+    if (line.trim() === '') return; // Skip empty lines
     const [key, value] = line.split('=').map((part) => part.trim());
-    if (value.startsWith('"') && value.endsWith('"')) {
-      drugData[key] = value.slice(1, -1);
-    } else if (!isNaN(value)) {
-      drugData[key] = parseFloat(value);
+    if (!key || value === undefined) return;
+
+    // Attempt to parse value as number
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      compoundData[key] = numValue;
     } else {
-      drugData[key] = value;
+      // Remove surrounding quotes if present
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        compoundData[key] = value.slice(1, -1);
+      } else {
+        compoundData[key] = value;
+      }
     }
   });
-  return drugData;
+  return compoundData;
 }

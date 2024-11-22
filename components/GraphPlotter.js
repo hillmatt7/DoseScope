@@ -1,6 +1,7 @@
-// GraphPlotter.js
+// components/GraphPlotter.js
+
 import React, { useState, useEffect } from 'react';
-import Graph from './components/Graph'; // Import the updated Graph component
+import Graph from './Graph';
 
 const GraphPlotter = () => {
   const [protocols, setProtocols] = useState([]);
