@@ -1,7 +1,7 @@
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
-import { Layout, notification } from 'antd';
+import { Layout, notification, Button } from 'antd';
 import AppHeader from './components/Header';
 import AppSidebar from './components/Sidebar';
 import ContentArea from './components/ContentArea';
@@ -9,8 +9,8 @@ import AppFooter from './components/Footer';
 import NewProtocolDrawer from './components/NewProtocolDrawer';
 import PropertiesDrawer from './components/PropertiesDrawer';
 import ScaleAdjustmentDrawer from './components/ScaleAdjustmentDrawer';
-import AddCompoundModal from './components/AddCompoundModal';
-import NewCompoundModal from './components/NewCompoundModal';
+import AddCompoundDrawer from './components/AddCompoundDrawer';
+import NewCompoundDrawer from './components/NewCompoundDrawer';
 import './styles.css';
 
 const { Content } = Layout;
@@ -21,14 +21,13 @@ const App = () => {
   const [showNewProtocolDrawer, setShowNewProtocolDrawer] = useState(false);
   const [showPropertiesDrawer, setShowPropertiesDrawer] = useState(false);
   const [showScaleAdjustmentDrawer, setShowScaleAdjustmentDrawer] = useState(false);
-  const [showAddCompoundModal, setShowAddCompoundModal] = useState(false);
-  const [showNewCompoundModal, setShowNewCompoundModal] = useState(false);
+  const [showAddCompoundDrawer, setShowAddCompoundDrawer] = useState(false);
+  const [showNewCompoundDrawer, setShowNewCompoundDrawer] = useState(false);
   const [scaleSettings, setScaleSettings] = useState({
     timeUnit: 'weeks',
   });
   const [notifications, setNotifications] = useState([]);
 
-  // Replace alert with Ant Design notification
   const openNotification = (message) => {
     notification.info({
       message,
@@ -57,7 +56,7 @@ const App = () => {
 
     window.electronAPI.receive('open-add-compound', () => {
       if (currentProtocol) {
-        setShowAddCompoundModal(true);
+        setShowAddCompoundDrawer(true);
       } else {
         openNotification('No protocol selected.');
       }
@@ -120,16 +119,37 @@ const App = () => {
         <AppSidebar
           currentProtocol={currentProtocol}
           setShowPropertiesDrawer={setShowPropertiesDrawer}
-          setShowNewCompoundModal={setShowNewCompoundModal}
+          setShowNewCompoundDrawer={setShowNewCompoundDrawer}
         />
         <Content>
-          <ContentArea
-            currentProtocol={currentProtocol}
-            setCurrentProtocol={setCurrentProtocol}
-            scaleSettings={scaleSettings}
-            notifications={notifications}
-            setNotifications={setNotifications}
-          />
+          {currentProtocol ? (
+            <ContentArea
+              currentProtocol={currentProtocol}
+              setCurrentProtocol={setCurrentProtocol}
+              scaleSettings={scaleSettings}
+              notifications={notifications}
+              setNotifications={setNotifications}
+              setShowAddCompoundDrawer={setShowAddCompoundDrawer}
+            />
+          ) : (
+            <div className="empty-screen">
+              <div className="create-protocol">
+                <Button
+                  type="primary"
+                  onClick={() => setShowNewProtocolDrawer(true)}
+                  style={{
+                    backgroundColor: '#ff4d4f',
+                    borderColor: '#ff4d4f',
+                    height: '60px',
+                    width: '200px',
+                    fontSize: '18px',
+                  }}
+                >
+                  Create New Protocol
+                </Button>
+              </div>
+            </div>
+          )}
         </Content>
       </Layout>
       <AppFooter />
@@ -153,15 +173,15 @@ const App = () => {
           />
         </>
       )}
-      <AddCompoundModal
-        visible={showAddCompoundModal}
-        onClose={() => setShowAddCompoundModal(false)}
+      <AddCompoundDrawer
+        visible={showAddCompoundDrawer}
+        onClose={() => setShowAddCompoundDrawer(false)}
         protocol={currentProtocol}
         setProtocol={setCurrentProtocol}
       />
-      <NewCompoundModal
-        visible={showNewCompoundModal}
-        onClose={() => setShowNewCompoundModal(false)}
+      <NewCompoundDrawer
+        visible={showNewCompoundDrawer}
+        onClose={() => setShowNewCompoundDrawer(false)}
       />
     </Layout>
   );
