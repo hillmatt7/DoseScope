@@ -54,22 +54,7 @@ const App = () => {
       setShowScaleAdjustmentDrawer(true);
     });
 
-    window.electronAPI.receive('open-add-compound', () => {
-      if (currentProtocol) {
-        setShowAddCompoundDrawer(true);
-      } else {
-        openNotification('No protocol selected.');
-      }
-    });
-
-    // Update notifications when compounds are added/removed
-    window.electronAPI.receive('compound-added', (compoundName) => {
-      addNotification(`Added medication: ${compoundName}`);
-    });
-
-    window.electronAPI.receive('compound-removed', (compoundName) => {
-      addNotification(`Removed medication: ${compoundName}`);
-    });
+    // Remove IPC listener for 'open-add-compound' as we're opening the drawer directly
   }, [currentProtocol]);
 
   const handleCreateProtocol = (protocolData) => {

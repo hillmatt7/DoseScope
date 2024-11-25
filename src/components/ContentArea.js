@@ -10,6 +10,7 @@ const ContentArea = ({
   scaleSettings,
   notifications,
   setNotifications,
+  setShowAddCompoundDrawer, // Receive as prop
 }) => {
   return (
     <div className="content-area">
@@ -18,6 +19,7 @@ const ContentArea = ({
         protocol={currentProtocol}
         setProtocol={setCurrentProtocol}
         setNotifications={setNotifications}
+        setShowAddCompoundDrawer={setShowAddCompoundDrawer} // Pass it down
       />
     </div>
   );

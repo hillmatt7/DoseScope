@@ -1,0 +1,16 @@
+/* src/components/MedicationControls.css */
+
+.medication-controls {
+    position: relative;
+  }
+  
+  .add-medication-btn {
+    /* Styles are defined inline in the component for the overlay effect */
+  }
+  
+  .medication-tags {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+  }
+  

@@ -3,13 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Tag, Space } from 'antd';
 import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import './MedicationControls.css'; // Ensure you have appropriate styling
 
-const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
+const MedicationControls = ({
+  protocol,
+  setProtocol,
+  setNotifications,
+  setShowAddCompoundDrawer, // Receive as prop
+}) => {
   const [medications, setMedications] = useState(protocol ? protocol.compounds : []);
 
   const addMedication = () => {
     if (protocol) {
-      window.electronAPI.send('open-add-compound');
+      setShowAddCompoundDrawer(true); // Open the AddCompoundDrawer directly
     } else {
       // Handle no protocol selected
     }
@@ -27,8 +33,6 @@ const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
       },
       ...prevNotifications,
     ]);
-
-    window.electronAPI.send('compound-removed', medication.name);
   };
 
   useEffect(() => {
@@ -45,9 +49,16 @@ const MedicationControls = ({ protocol, setProtocol, setNotifications }) => {
         icon={<PlusOutlined />}
         onClick={addMedication}
         className="add-medication-btn"
-        style={{ backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }}
+        style={{
+          backgroundColor: '#ff4d4f',
+          borderColor: '#ff4d4f',
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          zIndex: 1000,
+        }}
       />
-      <Space direction="vertical" className="medication-tabs">
+      <Space direction="vertical" className="medication-tags">
         {medications.map((med) => (
           <Tag
             key={med.name}
