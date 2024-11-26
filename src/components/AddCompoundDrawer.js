@@ -1,4 +1,4 @@
-// AddCompoundDrawer.js
+// src/components/AddCompoundDrawer.js
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -80,7 +80,7 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
         form.resetFields();
         onClose();
       } else {
-        message.error('Failed to calculate pharmacokinetics.');
+        message.error(`Failed to calculate pharmacokinetics: ${calculationResult.message}`);
       }
     } catch (error) {
       console.error('Error calculating pharmacokinetics:', error);
@@ -111,7 +111,13 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
   };
 
   const handleAddNewCompound = async (values) => {
-    if (!values.name || values.halfLife === undefined || values.Cmax === undefined) {
+    if (
+      !values.name ||
+      values.halfLife === undefined ||
+      values.Cmax === undefined ||
+      values.volume_of_distribution === undefined ||
+      values.ka === undefined
+    ) {
       message.error('Please fill out all required fields.');
       return;
     }
@@ -133,6 +139,8 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
       bioavailability_subcutaneous: values.bioavailability_subcutaneous === '' ? NaN : parseFloat(values.bioavailability_subcutaneous),
       bioavailability_inhalation: values.bioavailability_inhalation === '' ? NaN : parseFloat(values.bioavailability_inhalation),
       bioavailability_cream: values.bioavailability_cream === '' ? NaN : parseFloat(values.bioavailability_cream),
+      volume_of_distribution: values.volume_of_distribution === '' ? NaN : parseFloat(values.volume_of_distribution),
+      ka: values.ka === '' ? NaN : parseFloat(values.ka),
       topical_base: values.topical_base || '',
       model: values.model || '',
       notes: values.notes || '',
@@ -362,12 +370,19 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
             >
               <Input placeholder="Mechanism of Action (required)" />
             </Form.Item>
-            <Form.Item name="molecularWeight" label="Molecular Weight (g/mol)">
-              <InputNumber
-                style={{ width: '100%' }}
-                min={0}
-                placeholder="Molecular Weight (optional)"
-              />
+            <Form.Item
+              name="volume_of_distribution"
+              label="Volume of Distribution (L)"
+              rules={[{ required: true, message: 'Please enter Vd' }]}
+            >
+              <InputNumber style={{ width: '100%' }} min={0} placeholder="Vd (L)" />
+            </Form.Item>
+            <Form.Item
+              name="ka"
+              label="Absorption Rate Constant (ka)"
+              rules={[{ required: true, message: 'Please enter ka' }]}
+            >
+              <InputNumber style={{ width: '100%' }} min={0} placeholder="ka (1/h)" />
             </Form.Item>
             <Form.Item
               name="halfLife"

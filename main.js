@@ -136,23 +136,25 @@ function parseCompoundFile(content) {
     for (let line of lines) {
       line = line.trim();
       if (line.startsWith('#') || line === '') {
-        // Skip comments and empty lines
         continue;
       }
       if (line.startsWith('[') && line.endsWith(']')) {
-        // Skip section headers like [Compound]
         continue;
       }
       if (line.includes('=')) {
         let [key, value] = line.split('=').map((s) => s.trim());
 
-        // Remove inline comments
         if (value.includes('#')) {
           value = value.split('#')[0].trim();
         }
 
-        // Handle units in value
-        if (key === 'half_life' || key === 'Tmax' || key === 'Cmax') {
+        if (
+          key === 'half_life' ||
+          key === 'Tmax' ||
+          key === 'Cmax' ||
+          key === 'ka' ||
+          key === 'volume_of_distribution'
+        ) {
           const parts = value.split(' ');
           const numValue = parseFloat(parts[0].toLowerCase() === 'nan' ? NaN : parts[0]);
           const unit = parts[1] || '';
@@ -164,8 +166,11 @@ function parseCompoundFile(content) {
         } else if (key === 'topical base (used in cream)') {
           compound['topical_base'] = value;
         } else {
-          // Update for new classification fields
-          if (key === 'therapeutic_use' || key === 'chemical_structure' || key === 'mechanism_of_action') {
+          if (
+            key === 'therapeutic_use' ||
+            key === 'chemical_structure' ||
+            key === 'mechanism_of_action'
+          ) {
             compound[key] = value;
           } else {
             compound[key] = value;
@@ -189,6 +194,14 @@ function generateCompoundFileContent(compoundData) {
   if (compoundData.halfLife !== undefined && compoundData.halfLifeUnit) {
     const halfLifeValue = isNaN(compoundData.halfLife) ? 'nan' : compoundData.halfLife;
     content += `half_life = ${halfLifeValue} ${compoundData.halfLifeUnit}\n`;
+  }
+  if (compoundData.ka !== undefined) {
+    const kaValue = isNaN(compoundData.ka) ? 'nan' : compoundData.ka;
+    content += `ka = ${kaValue} 1/h\n`;
+  }
+  if (compoundData.volume_of_distribution !== undefined) {
+    const vdValue = isNaN(compoundData.volume_of_distribution) ? 'nan' : compoundData.volume_of_distribution;
+    content += `volume_of_distribution = ${vdValue} L\n`;
   }
   if (compoundData.Cmax !== undefined) {
     const CmaxValue = isNaN(compoundData.Cmax) ? 'nan' : compoundData.Cmax;
