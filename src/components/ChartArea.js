@@ -44,38 +44,11 @@ const ChartArea = ({ protocol, scaleSettings }) => {
     }
 
     // Time Unit Adjustments
-    const timeUnit = scaleSettings?.timeUnit || protocol?.lengthUnit || 'weeks';
-    let minorTickInterval, majorTickInterval, timeMultiplier, timeFormat;
+    const timeUnit = scaleSettings?.timeUnit || protocol?.lengthUnit || 'hours';
+    let minorTickInterval = 1; // Default to 1 hour
+    let timeFormat = (d) => `${d} h`;
 
-    if (timeUnit === 'weeks') {
-      minorTickInterval = 1 * 24; // 1 day in hours
-      majorTickInterval = 7 * 24; // 1 week in hours
-      timeMultiplier = 24; // Convert days to hours
-      timeFormat = (d) => {
-        const dayNumber = Math.floor(d / 24) + 1;
-        if (dayNumber % 7 === 0) {
-          return `Week ${dayNumber / 7}`;
-        }
-        return null;
-      };
-    } else if (timeUnit === 'days') {
-      minorTickInterval = 1; // 1 hour
-      majorTickInterval = 24; // 24 hours in a day
-      timeMultiplier = 1; // Hours
-      timeFormat = (d) => {
-        const dayNumber = Math.floor(d / 24) + 1;
-        if (d % 24 === 0) {
-          return `Day ${dayNumber}`;
-        }
-        return null;
-      };
-    } else {
-      // Default to days if timeUnit is not 'weeks' or 'days'
-      minorTickInterval = 1; // 1 hour
-      majorTickInterval = 24; // 24 hours in a day
-      timeMultiplier = 1; // Hours
-      timeFormat = (d) => `Time ${d}`;
-    }
+    // Modify timeFormat and minorTickInterval based on timeUnit if needed
 
     const xAxis = d3
       .axisBottom(xScale)
@@ -160,7 +133,7 @@ const ChartArea = ({ protocol, scaleSettings }) => {
       .attr('transform', `translate(${width / 2},${height + margin.bottom - 10})`)
       .style('text-anchor', 'middle')
       .style('fill', '#333')
-      .text('Time');
+      .text('Time (hours)');
 
     svg
       .append('text')
@@ -217,47 +190,30 @@ const ChartArea = ({ protocol, scaleSettings }) => {
   };
 
   const generateData = (protocol) => {
-    const totalConcentrationData = [];
-    const duration =
-      protocol.lengthUnit === 'weeks'
-        ? protocol.length * 7 * 24
-        : protocol.length * 24;
+    const dataMap = new Map();
+    let maxTime = 0;
 
-    for (let time = 0; time <= duration; time += 1) {
-      let totalConcentration = 0;
+    protocol.compounds.forEach((compound) => {
+      if (compound.calculationResult && compound.calculationResult.length > 0) {
+        compound.calculationResult.forEach((point) => {
+          const time = point.time;
+          const concentration = point.concentration;
+          if (!dataMap.has(time)) {
+            dataMap.set(time, 0);
+          }
+          dataMap.set(time, dataMap.get(time) + concentration);
+          if (time > maxTime) maxTime = time;
+        });
+      }
+    });
 
-      protocol.compounds.forEach((compound) => {
-        const concentration = calculateConcentration(compound, time);
-        totalConcentration += concentration;
-      });
-
-      totalConcentrationData.push({ time, totalConcentration });
+    const data = [];
+    for (let time = 0; time <= maxTime; time += 0.5) {
+      const totalConcentration = dataMap.get(time) || 0;
+      data.push({ time, totalConcentration });
     }
 
-    return totalConcentrationData;
-  };
-
-  const calculateConcentration = (compound, time) => {
-    const { halfLife, Cmax, bioavailability, Tmax } = compound;
-
-    // Validate that all required values are numbers
-    if (
-      isNaN(halfLife) ||
-      isNaN(Cmax) ||
-      isNaN(bioavailability) ||
-      isNaN(Tmax) ||
-      halfLife <= 0 ||
-      Tmax <= 0
-    ) {
-      return 0;
-    }
-
-    const clearanceRate = 0.693 / halfLife;
-    const concentration =
-      (Cmax * bioavailability) *
-      (Math.exp(-clearanceRate * time) / (1 - Math.exp(-clearanceRate * Tmax)));
-
-    return concentration > 0 ? concentration : 0;
+    return data;
   };
 
   return <div className="chart-area" ref={chartRef}></div>;

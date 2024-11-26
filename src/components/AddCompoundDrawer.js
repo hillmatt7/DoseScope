@@ -1,4 +1,4 @@
-// src/components/AddCompoundDrawer.js
+// AddCompoundDrawer.js
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -22,6 +22,7 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
   const [form] = Form.useForm();
   const [addNewForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('existing');
+  const [selectedRoute, setSelectedRoute] = useState('oral'); // Default route
 
   useEffect(() => {
     // Fetch compounds from local_library
@@ -43,7 +44,7 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
     setSelectedCompound(compound);
   };
 
-  const handleAddCompound = (values) => {
+  const handleAddCompound = async (values) => {
     if (!protocol) {
       message.error('No protocol selected.');
       return;
@@ -54,31 +55,63 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
       return;
     }
 
-    const updatedProtocol = {
-      ...protocol,
-      compounds: [
-        ...protocol.compounds,
-        {
-          ...selectedCompound,
-          ...values,
-          startDay: values.durationFrom,
-          endDay: values.durationTo,
-        },
-      ],
+    // Send data to Python backend for calculations
+    try {
+      const calculationResult = await calculatePharmacokinetics({
+        compound: selectedCompound,
+        dosingInfo: values,
+      });
+      if (calculationResult.success) {
+        const updatedProtocol = {
+          ...protocol,
+          compounds: [
+            ...protocol.compounds,
+            {
+              ...selectedCompound,
+              ...values,
+              startDay: values.durationFrom,
+              endDay: values.durationTo,
+              calculationResult: calculationResult.data, // Store the calculation result
+            },
+          ],
+        };
+        setProtocol(updatedProtocol);
+        message.success('Compound added to protocol.');
+        form.resetFields();
+        onClose();
+      } else {
+        message.error('Failed to calculate pharmacokinetics.');
+      }
+    } catch (error) {
+      console.error('Error calculating pharmacokinetics:', error);
+      message.error('Failed to calculate pharmacokinetics.');
+    }
+  };
+
+  const calculatePharmacokinetics = async ({ compound, dosingInfo }) => {
+    // Make an API request to the Python backend for calculations
+    const requestData = {
+      compound,
+      dosingInfo,
     };
-    setProtocol(updatedProtocol);
-    message.success('Compound added to protocol.');
-    form.resetFields();
-    onClose();
+    try {
+      const response = await fetch('http://localhost:8000/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error communicating with Python backend:', error);
+      return { success: false };
+    }
   };
 
   const handleAddNewCompound = async (values) => {
-    if (
-      !values.name ||
-      (values.halfLife === undefined || values.halfLife === '') ||
-      (values.Cmax === undefined || values.Cmax === '') ||
-      (values.bioavailability === undefined || values.bioavailability === '')
-    ) {
+    if (!values.name || values.halfLife === undefined || values.Cmax === undefined) {
       message.error('Please fill out all required fields.');
       return;
     }
@@ -86,14 +119,21 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
     // Prepare compound data with keys matching the file format
     const compoundData = {
       name: values.name,
-      type: values.type || '',
-      category: values.category || '',
+      therapeutic_use: values.therapeutic_use || '',
+      chemical_structure: values.chemical_structure || '',
+      mechanism_of_action: values.mechanism_of_action || '',
       halfLife: values.halfLife === '' ? NaN : parseFloat(values.halfLife),
       halfLifeUnit: values.halfLifeUnit,
       Cmax: values.Cmax === '' ? NaN : parseFloat(values.Cmax),
       Tmax: values.Tmax === '' ? NaN : parseFloat(values.Tmax),
       TmaxUnit: values.TmaxUnit || '',
-      bioavailability: values.bioavailability === '' ? NaN : parseFloat(values.bioavailability),
+      bioavailability_oral: values.bioavailability_oral === '' ? NaN : parseFloat(values.bioavailability_oral),
+      bioavailability_iv: values.bioavailability_iv === '' ? NaN : parseFloat(values.bioavailability_iv),
+      bioavailability_im: values.bioavailability_im === '' ? NaN : parseFloat(values.bioavailability_im),
+      bioavailability_subcutaneous: values.bioavailability_subcutaneous === '' ? NaN : parseFloat(values.bioavailability_subcutaneous),
+      bioavailability_inhalation: values.bioavailability_inhalation === '' ? NaN : parseFloat(values.bioavailability_inhalation),
+      bioavailability_cream: values.bioavailability_cream === '' ? NaN : parseFloat(values.bioavailability_cream),
+      topical_base: values.topical_base || '',
       model: values.model || '',
       notes: values.notes || '',
     };
@@ -119,6 +159,32 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
       message.error('Failed to save compound.');
     }
   };
+
+  // Route-specific visibility logic
+  const renderBioavailabilityFields = () => {
+    const routes = ['oral', 'iv', 'im', 'subcutaneous', 'inhalation', 'cream'];
+    return routes.map((route) => (
+      <Form.Item
+        key={`bioavailability_${route}`}
+        name={`bioavailability_${route}`}
+        label={`Bioavailability (${route})`}
+      >
+        <InputNumber
+          style={{ width: '100%' }}
+          min={0}
+          max={1}
+          step={0.01}
+          placeholder={`Bioavailability (${route})`}
+        />
+      </Form.Item>
+    ));
+  };
+
+  const renderTopicalBaseField = () => (
+    <Form.Item name="topical_base" label="Topical Base (used in cream)">
+      <Input placeholder="Topical Base (used in cream)" />
+    </Form.Item>
+  );
 
   return (
     <Drawer
@@ -156,6 +222,21 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
             {selectedCompound && (
               <>
                 <Form.Item
+                  name="route"
+                  label="Administration Route"
+                  rules={[{ required: true, message: 'Please select a route' }]}
+                  initialValue="oral"
+                >
+                  <Select onChange={(value) => setSelectedRoute(value)}>
+                    <Option value="oral">Oral</Option>
+                    <Option value="iv">IV</Option>
+                    <Option value="im">IM (Intramuscular)</Option>
+                    <Option value="subcutaneous">Subcutaneous</Option>
+                    <Option value="inhalation">Inhalation</Option>
+                    <Option value="cream">Cream</Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item
                   name="dose"
                   label="Dosage"
                   rules={[{ required: true, message: 'Please enter the dosage' }]}
@@ -178,23 +259,15 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
                 </Form.Item>
                 <Form.Item
                   name="dosingSchedule"
-                  label="Dosing Schedule"
-                  initialValue="Once a day"
+                  label="Dosing Interval (hours)"
+                  initialValue={24}
+                  rules={[{ required: true, message: 'Please enter dosing interval' }]}
                 >
-                  <Select>
-                    <Option value="4 times a day">4 times a day</Option>
-                    <Option value="3 times a day">3 times a day</Option>
-                    <Option value="2 times a day">2 times a day</Option>
-                    <Option value="Once a day">Once a day</Option>
-                    <Option value="Every other day">Every other day</Option>
-                    <Option value="3 times a week">3 times a week</Option>
-                    <Option value="Once every 3 days">Once every 3 days</Option>
-                    <Option value="Once every 3.5 days">Once every 3.5 days</Option>
-                    <Option value="Once every 4 days">Once every 4 days</Option>
-                    <Option value="Once every 5 days">Once every 5 days</Option>
-                    <Option value="Once every 6 days">Once every 6 days</Option>
-                    <Option value="Once every 7 days">Once every 7 days</Option>
-                  </Select>
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    placeholder="Dosing interval in hours"
+                  />
                 </Form.Item>
                 <Form.Item label="Duration">
                   <Input.Group compact>
@@ -268,11 +341,26 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
             >
               <Input placeholder="Compound Name (required)" />
             </Form.Item>
-            <Form.Item name="type" label="Type">
-              <Input placeholder="Type (optional)" />
+            <Form.Item
+              name="therapeutic_use"
+              label="Therapeutic Use (Primary Level)"
+              rules={[{ required: true, message: 'Please enter the therapeutic use' }]}
+            >
+              <Input placeholder="Therapeutic Use (required)" />
             </Form.Item>
-            <Form.Item name="category" label="Category">
-              <Input placeholder="Category (optional)" />
+            <Form.Item
+              name="chemical_structure"
+              label="Chemical Structure (Secondary Level)"
+              rules={[{ required: true, message: 'Please enter the chemical structure' }]}
+            >
+              <Input placeholder="Chemical Structure (required)" />
+            </Form.Item>
+            <Form.Item
+              name="mechanism_of_action"
+              label="Mechanism of Action (Tertiary Level)"
+              rules={[{ required: true, message: 'Please enter the mechanism of action' }]}
+            >
+              <Input placeholder="Mechanism of Action (required)" />
             </Form.Item>
             <Form.Item name="molecularWeight" label="Molecular Weight (g/mol)">
               <InputNumber
@@ -322,19 +410,10 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
                 <Option value="days">Days</Option>
               </Select>
             </Form.Item>
-            <Form.Item
-              name="bioavailability"
-              label="Bioavailability (0-1, required)"
-              rules={[{ required: true, message: 'Please enter bioavailability' }]}
-            >
-              <InputNumber
-                style={{ width: '100%' }}
-                min={0}
-                max={1}
-                step={0.01}
-                placeholder="Bioavailability (0-1)"
-              />
-            </Form.Item>
+            {/* Render bioavailability fields */}
+            {renderBioavailabilityFields()}
+            {/* Only show topical_base field if cream bioavailability is provided */}
+            {addNewForm.getFieldValue('bioavailability_cream') && renderTopicalBaseField()}
             <Form.Item name="model" label="Model">
               <Input placeholder="Model (optional)" />
             </Form.Item>

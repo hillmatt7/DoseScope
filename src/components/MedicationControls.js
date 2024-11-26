@@ -1,7 +1,7 @@
 // src/components/MedicationControls.js
 
 import React, { useState, useEffect } from 'react';
-import { Button, Tag, Space } from 'antd';
+import { Button, Tag, Space, message } from 'antd';
 import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import './MedicationControls.css'; // Ensure you have appropriate styling
 
@@ -17,12 +17,12 @@ const MedicationControls = ({
     if (protocol) {
       setShowAddCompoundDrawer(true); // Open the AddCompoundDrawer directly
     } else {
-      // Handle no protocol selected
+      message.error('No protocol selected.');
     }
   };
 
   const removeMedication = (medication) => {
-    const updatedCompounds = medications.filter((med) => med.name !== medication.name);
+    const updatedCompounds = medications.filter((med) => med !== medication);
     setMedications(updatedCompounds);
     setProtocol({ ...protocol, compounds: updatedCompounds });
 
@@ -59,9 +59,9 @@ const MedicationControls = ({
         }}
       />
       <Space direction="vertical" className="medication-tags">
-        {medications.map((med) => (
+        {medications.map((med, index) => (
           <Tag
-            key={med.name}
+            key={index}
             closable
             onClose={() => removeMedication(med)}
             closeIcon={<CloseCircleOutlined />}

@@ -135,12 +135,22 @@ function parseCompoundFile(content) {
     const compound = {};
     for (let line of lines) {
       line = line.trim();
+      if (line.startsWith('#') || line === '') {
+        // Skip comments and empty lines
+        continue;
+      }
       if (line.startsWith('[') && line.endsWith(']')) {
         // Skip section headers like [Compound]
         continue;
       }
       if (line.includes('=')) {
         let [key, value] = line.split('=').map((s) => s.trim());
+
+        // Remove inline comments
+        if (value.includes('#')) {
+          value = value.split('#')[0].trim();
+        }
+
         // Handle units in value
         if (key === 'half_life' || key === 'Tmax' || key === 'Cmax') {
           const parts = value.split(' ');
@@ -148,11 +158,18 @@ function parseCompoundFile(content) {
           const unit = parts[1] || '';
           compound[key] = isNaN(numValue) ? null : numValue;
           compound[`${key}_unit`] = unit;
-        } else if (key === 'bioavailability') {
+        } else if (key.startsWith('bioavailability')) {
           const numValue = parseFloat(value.toLowerCase() === 'nan' ? NaN : value);
           compound[key] = isNaN(numValue) ? null : numValue;
+        } else if (key === 'topical base (used in cream)') {
+          compound['topical_base'] = value;
         } else {
-          compound[key] = value;
+          // Update for new classification fields
+          if (key === 'therapeutic_use' || key === 'chemical_structure' || key === 'mechanism_of_action') {
+            compound[key] = value;
+          } else {
+            compound[key] = value;
+          }
         }
       }
     }
@@ -166,8 +183,9 @@ function parseCompoundFile(content) {
 function generateCompoundFileContent(compoundData) {
   let content = '[Compound]\n';
   if (compoundData.name) content += `name = ${compoundData.name}\n`;
-  if (compoundData.type) content += `type = ${compoundData.type}\n`;
-  if (compoundData.category) content += `category = ${compoundData.category}\n`;
+  if (compoundData.therapeutic_use) content += `therapeutic_use = ${compoundData.therapeutic_use}\n`;
+  if (compoundData.chemical_structure) content += `chemical_structure = ${compoundData.chemical_structure}\n`;
+  if (compoundData.mechanism_of_action) content += `mechanism_of_action = ${compoundData.mechanism_of_action}\n`;
   if (compoundData.halfLife !== undefined && compoundData.halfLifeUnit) {
     const halfLifeValue = isNaN(compoundData.halfLife) ? 'nan' : compoundData.halfLife;
     content += `half_life = ${halfLifeValue} ${compoundData.halfLifeUnit}\n`;
@@ -180,9 +198,22 @@ function generateCompoundFileContent(compoundData) {
     const TmaxValue = isNaN(compoundData.Tmax) ? 'nan' : compoundData.Tmax;
     content += `Tmax = ${TmaxValue} ${compoundData.TmaxUnit}\n`;
   }
-  if (compoundData.bioavailability !== undefined) {
-    const bioavailabilityValue = isNaN(compoundData.bioavailability) ? 'nan' : compoundData.bioavailability;
-    content += `bioavailability = ${bioavailabilityValue}\n`;
+  // Handle bioavailability fields
+  if (compoundData.bioavailability_oral !== undefined) {
+    const bioavailabilityValue = isNaN(compoundData.bioavailability_oral) ? 'nan' : compoundData.bioavailability_oral;
+    content += `bioavailability_oral = ${bioavailabilityValue}\n`;
+  }
+  // Handle route-specific bioavailability fields
+  const routes = ['iv', 'im', 'subcutaneous', 'inhalation', 'cream'];
+  for (const route of routes) {
+    const key = `bioavailability_${route}`;
+    if (compoundData[key] !== undefined) {
+      const value = isNaN(compoundData[key]) ? 'nan' : compoundData[key];
+      content += `${key} = ${value}\n`;
+    }
+  }
+  if (compoundData['topical_base']) {
+    content += `topical base (used in cream) = ${compoundData['topical_base']}\n`;
   }
   if (compoundData.model) content += `model = ${compoundData.model}\n`;
   if (compoundData.notes) content += `sources_notes = ${compoundData.notes}\n`;
