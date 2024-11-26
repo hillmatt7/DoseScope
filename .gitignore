@@ -23,3 +23,9 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
+
+# Ignore archive
+archives/
+
+# Ignore local library
+local_library/

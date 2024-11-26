@@ -24,7 +24,7 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
   const [activeTab, setActiveTab] = useState('existing');
 
   useEffect(() => {
-    // Fetch compounds from local library
+    // Fetch compounds from local_library
     const fetchCompounds = async () => {
       try {
         const response = await window.electronAPI.invoke('get-compounds');
@@ -73,23 +73,47 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
   };
 
   const handleAddNewCompound = async (values) => {
-    if (!values.name || !values.halfLife || !values.Cmax || !values.bioavailability) {
+    if (
+      !values.name ||
+      (values.halfLife === undefined || values.halfLife === '') ||
+      (values.Cmax === undefined || values.Cmax === '') ||
+      (values.bioavailability === undefined || values.bioavailability === '')
+    ) {
       message.error('Please fill out all required fields.');
       return;
     }
 
+    // Prepare compound data with keys matching the file format
+    const compoundData = {
+      name: values.name,
+      type: values.type || '',
+      category: values.category || '',
+      halfLife: values.halfLife === '' ? NaN : parseFloat(values.halfLife),
+      halfLifeUnit: values.halfLifeUnit,
+      Cmax: values.Cmax === '' ? NaN : parseFloat(values.Cmax),
+      Tmax: values.Tmax === '' ? NaN : parseFloat(values.Tmax),
+      TmaxUnit: values.TmaxUnit || '',
+      bioavailability: values.bioavailability === '' ? NaN : parseFloat(values.bioavailability),
+      model: values.model || '',
+      notes: values.notes || '',
+    };
+
     try {
-      await window.electronAPI.invoke('add-compound', values);
-      message.success('Compound saved successfully!');
-      // Refresh compounds list
-      const response = await window.electronAPI.invoke('get-compounds');
-      setCompounds(response);
-      addNewForm.resetFields();
-      // Switch back to 'Add Existing Compound' tab
-      setActiveTab('existing');
-      // Set the newly added compound as selected
-      setSelectedCompound(values);
-      form.setFieldsValue({ compoundName: values.name });
+      const result = await window.electronAPI.invoke('add-compound', compoundData);
+      if (result) {
+        message.success('Compound saved successfully!');
+        // Refresh compounds list
+        const response = await window.electronAPI.invoke('get-compounds');
+        setCompounds(response);
+        addNewForm.resetFields();
+        // Switch back to 'Add Existing Compound' tab
+        setActiveTab('existing');
+        // Set the newly added compound as selected
+        setSelectedCompound(compoundData);
+        form.setFieldsValue({ compoundName: compoundData.name });
+      } else {
+        message.error('Failed to save compound.');
+      }
     } catch (error) {
       console.error('Error saving compound:', error);
       message.error('Failed to save compound.');
@@ -251,14 +275,18 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
               <Input placeholder="Category (optional)" />
             </Form.Item>
             <Form.Item name="molecularWeight" label="Molecular Weight (g/mol)">
-              <InputNumber style={{ width: '100%' }} min={0} placeholder="Molecular Weight (optional)" />
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                placeholder="Molecular Weight (optional)"
+              />
             </Form.Item>
             <Form.Item
               name="halfLife"
               label="Half-Life (required)"
               rules={[{ required: true, message: 'Please enter the half-life' }]}
             >
-              <InputNumber style={{ width: '100%' }} min={0} placeholder="Half-Life (hours)" />
+              <InputNumber style={{ width: '100%' }} min={0} placeholder="Half-Life" />
             </Form.Item>
             <Form.Item
               name="halfLifeUnit"
@@ -266,6 +294,8 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
               initialValue="hours"
             >
               <Select>
+                <Option value="seconds">Seconds</Option>
+                <Option value="minutes">Minutes</Option>
                 <Option value="hours">Hours</Option>
                 <Option value="days">Days</Option>
               </Select>
@@ -275,10 +305,22 @@ const AddCompoundDrawer = ({ visible, onClose, protocol, setProtocol }) => {
               label="Cmax (ng/ml, required)"
               rules={[{ required: true, message: 'Please enter Cmax' }]}
             >
-              <InputNumber style={{ width: '100%' }} min={0} placeholder="Cmax (ng/ml)" />
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                placeholder="Cmax (ng/ml)"
+              />
             </Form.Item>
-            <Form.Item name="Tmax" label="Tmax (hours, optional)">
-              <InputNumber style={{ width: '100%' }} min={0} placeholder="Tmax (hours)" />
+            <Form.Item name="Tmax" label="Tmax (optional)">
+              <InputNumber style={{ width: '100%' }} min={0} placeholder="Tmax" />
+            </Form.Item>
+            <Form.Item name="TmaxUnit" label="Tmax Unit" initialValue="hours">
+              <Select>
+                <Option value="seconds">Seconds</Option>
+                <Option value="minutes">Minutes</Option>
+                <Option value="hours">Hours</Option>
+                <Option value="days">Days</Option>
+              </Select>
             </Form.Item>
             <Form.Item
               name="bioavailability"
