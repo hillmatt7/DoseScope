@@ -29,3 +29,9 @@ archives/
 
 # Ignore local library
 local_library/
+
+# Ignore UI extras
+NewUI/
+
+# Ignore archives
+archives/
