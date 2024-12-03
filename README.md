@@ -1,6 +1,6 @@
 
 # DoseScope
-> Track and monitor substances in the bloodstream with precision.
+> Track and monitor substances in the bloodstream.
 
 **DoseScope** is a tracking application designed to monitor the presence of various substances—such as drugs, foods, and supplements—in the bloodstream. It provides users with interactive tools to manage intake schedules, visualize metabolization rates, and analyze health data over time. Built with Electron, React, and D3.js, DoseScope offers a robust and responsive experience.
 
